@@ -1,0 +1,19 @@
+{
+  "name": "@runeforge/runescript-analysis",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Analyse semantique des scripts rAthena/Hercules : portees de labels, fonctions, references, index d'espace de travail, diagnostics. Sans dependance UI, Tauri ni systeme de fichiers.",
+  "license": "GPL-3.0-only",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json"
+  },
+  "dependencies": {
+    "@runeforge/emulator-core": "workspace:*",
+    "@runeforge/runescript-core": "workspace:*",
+    "@runeforge/runescript-parser": "workspace:*"
+  }
+}

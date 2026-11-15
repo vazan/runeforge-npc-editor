@@ -1,0 +1,127 @@
+name: Diagnostic or compatibility report
+description: A diagnostic is wrong (false alarm or missed problem), or command documentation or an emulator difference is wrong.
+title: "[Diagnostic]: "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        RuneForge analyses scripts **statically**; it never runs your server. A diagnostic is a hint with a stated confidence, and **only your real server is the authority** on whether a script loads. This form exists to calibrate those hints against real servers. Issues in **English or French** are welcome (les tickets en français sont les bienvenus).
+
+        **The most useful report** names the diagnostic code, shows the smallest script that triggers it, and says what your server actually did with that script.
+
+        - **Never paste secrets** (API keys, tokens, SSH keys, passwords).
+        - Paste only a **minimal, anonymised** excerpt, not a whole server or NPC folder.
+        - A command that is **not in your emulator's documentation** (a custom command, a fork) is flagged with the severity of your project's `validation.unknownCommands` setting. You can declare it as a project command (quick fix `Ctrl+.`); report it here only if that does not behave as described.
+
+  - type: dropdown
+    id: kind
+    attributes:
+      label: What is wrong?
+      options:
+        - "False alarm: a problem is reported but my server loads the script fine"
+        - "Missed problem: nothing is reported but my server rejects or ignores the script"
+        - "Wrong message / wrong position / wrong severity"
+        - "Wrong or missing command documentation / signature / argument count"
+        - "Difference between rAthena and Hercules that is not handled"
+        - "Other"
+    validations:
+      required: true
+
+  - type: input
+    id: code
+    attributes:
+      label: Diagnostic code
+      description: "As shown in the editor or in the project report (Ctrl+Shift+M), for example `RA0001`, `RA0016`. Write `none` for a missed problem."
+      placeholder: RA0016
+    validations:
+      required: true
+
+  - type: dropdown
+    id: confidence
+    attributes:
+      label: Confidence shown by the application
+      options:
+        - certain
+        - probable
+        - unknown
+        - Not shown
+        - Not applicable (missed problem)
+    validations:
+      required: true
+
+  - type: textarea
+    id: sample
+    attributes:
+      label: Smallest script that shows it
+      description: "Include the line that is flagged (or should be) with a few lines around it. If the result depends on other files (a function defined elsewhere, load order), say so and describe them."
+      render: text
+    validations:
+      required: true
+
+  - type: textarea
+    id: server-result
+    attributes:
+      label: What did your real server do with it?
+      description: "The loading message or the observed behaviour (for example the exact map-server line, or 'loaded and works in game'). If you did not test it on a server, write that, and say so honestly: a report without a server result can only be checked against the documentation."
+    validations:
+      required: true
+
+  - type: dropdown
+    id: emulator
+    attributes:
+      label: Emulator
+      options:
+        - rAthena
+        - Hercules
+        - A fork or custom build
+        - Unknown
+    validations:
+      required: true
+
+  - type: input
+    id: emulator-version
+    attributes:
+      label: Emulator version or revision
+      description: "Commit hash or release, and the mode if relevant (for example `rAthena a1b2c3d, re` or `pre-re`)."
+    validations:
+      required: true
+
+  - type: dropdown
+    id: scope
+    attributes:
+      label: Index scope in the project report
+      description: "The report can cover every indexed file or only the scripts your server actually loads."
+      options:
+        - Only the scripts the server loads (default)
+        - All indexed files
+        - I did not use the project report
+    validations:
+      required: false
+
+  - type: input
+    id: app-version
+    attributes:
+      label: RuneForge Studio version
+      description: "Settings > About (Paramètres > À propos)."
+    validations:
+      required: true
+
+  - type: textarea
+    id: project-config
+    attributes:
+      label: Relevant project settings (optional)
+      description: "The `emulator` and `commands` parts of `.runeforge/project.json` if you declared custom commands. Remove anything private."
+      render: json
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: confirmations
+    attributes:
+      label: Before submitting
+      options:
+        - label: I searched the existing issues and the known limitations.
+          required: true
+        - label: I removed every secret (keys, tokens, passwords) and private data from this report.
+          required: true

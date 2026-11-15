@@ -1,0 +1,21 @@
+{
+  "name": "@runeforge/runescript-language-server",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Service de langage RuneScript (forme LSP) : diagnostics, symboles, definition, references, recherche de symboles. Sans dependance UI, Tauri ni systeme de fichiers.",
+  "license": "GPL-3.0-only",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json"
+  },
+  "dependencies": {
+    "@runeforge/emulator-core": "workspace:*",
+    "@runeforge/npc-templates": "workspace:*",
+    "@runeforge/runescript-analysis": "workspace:*",
+    "@runeforge/runescript-core": "workspace:*",
+    "@runeforge/runescript-parser": "workspace:*"
+  }
+}

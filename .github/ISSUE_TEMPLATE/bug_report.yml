@@ -1,0 +1,170 @@
+name: Bug report
+description: Something does not work as documented, or one of your files was not handled safely.
+title: "[Bug]: "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to report a problem. Issues in **English or French** are welcome (les tickets en français sont les bienvenus).
+
+        **Before you post**
+        - **Never paste secrets**: API keys, access tokens, SSH keys, signing keys (`*.key`), passwords. Nothing in this form needs them.
+        - **A security vulnerability does not belong here.** Use the private reporting link on the "New issue" page.
+        - Paste only a **minimal, anonymised** script excerpt, never a whole server.
+        - The optional local diagnostic log (Settings > Privacy, off by default) is designed to contain no code, no path and no error message, so it is safe to attach (`logs/runeforge.log` in the application's local data folder; `%LOCALAPPDATA%\dev.runeforge.studio` on Windows).
+        - Check the [known limitations](https://github.com/vazan/runeforge-npc-editor/blob/HEAD/docs/KNOWN_LIMITATIONS.md) and search existing issues first.
+
+  - type: dropdown
+    id: file-integrity
+    attributes:
+      label: Did RuneForge change, lose or corrupt any of your files?
+      description: Your script source is treated as sacred, so a file-integrity problem is the highest priority. Be precise in the description below.
+      options:
+        - "No - no file was affected"
+        - "Yes - a file was changed in a way I did not ask for"
+        - "Yes - a file or some of its text was lost"
+        - "Not sure"
+    validations:
+      required: true
+
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: What you saw, including any message shown by the application (copy it as text, or describe it).
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: Numbered steps, from opening the application. Say which project you opened and whether it was a full server folder or a standalone script folder.
+      placeholder: |
+        1. Open a project ...
+        2. Open file ...
+        3. Press ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: What did you expect instead?
+    validations:
+      required: true
+
+  - type: input
+    id: app-version
+    attributes:
+      label: RuneForge Studio version
+      description: "Settings > About (Paramètres > À propos), for example `0.2.0`."
+    validations:
+      required: true
+
+  - type: dropdown
+    id: platform
+    attributes:
+      label: Operating system
+      options:
+        - Windows 11
+        - Windows 10
+        - Linux (Ubuntu or Debian based)
+        - Linux (another distribution)
+        - Other
+    validations:
+      required: true
+
+  - type: dropdown
+    id: install-kind
+    attributes:
+      label: How are you running it?
+      options:
+        - Windows executable (runeforge-studio.exe)
+        - Linux AppImage
+        - Linux raw binary (ELF without extension)
+        - Built from source
+        - Other
+    validations:
+      required: true
+
+  - type: input
+    id: linux-details
+    attributes:
+      label: Linux distribution and glibc (Linux only)
+      description: "For example `Ubuntu 24.04, glibc 2.39` (output of `ldd --version`). An AppImage or binary built on a newer system may not start on an older one."
+    validations:
+      required: false
+
+  - type: dropdown
+    id: emulator
+    attributes:
+      label: Emulator profile shown in the status bar
+      options:
+        - rAthena
+        - Hercules
+        - Custom or unknown
+        - No server project (standalone script folder)
+        - Not relevant to this bug
+    validations:
+      required: false
+
+  - type: input
+    id: emulator-version
+    attributes:
+      label: Emulator version or revision (if known)
+      description: "Commit hash or release of your server, and whether it is a fork, for example `rAthena a1b2c3d, re mode`."
+    validations:
+      required: false
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - Editor (Monaco) / tabs / themes
+        - Opening / saving / encoding / line endings / recovery
+        - Parser and diagnostics
+        - Completion / hover / signature help
+        - Project index / navigation / rename / references
+        - Server databases (items / monsters / maps / constants)
+        - NPC wizards and templates
+        - Visual editor and node builder
+        - Dialogue simulation
+        - AI assistant
+        - Git panel
+        - Local deployment
+        - Updates
+        - Installation or startup
+        - Other
+    validations:
+      required: false
+
+  - type: textarea
+    id: sample
+    attributes:
+      label: Minimal script sample (anonymised)
+      description: "The smallest text that shows the problem. For file-handling bugs also give the encoding (for example windows-1252), whether there is a BOM, and the line endings (CRLF, LF or mixed)."
+      render: text
+    validations:
+      required: false
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Error messages or diagnostic log excerpt
+      description: Remove anything private first. Do not paste keys or tokens.
+      render: text
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: confirmations
+    attributes:
+      label: Before submitting
+      options:
+        - label: I searched the existing issues and the known limitations.
+          required: true
+        - label: I removed every secret (keys, tokens, passwords) and private data from this report.
+          required: true

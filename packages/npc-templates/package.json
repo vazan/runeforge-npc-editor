@@ -1,0 +1,20 @@
+{
+  "name": "@runeforge/npc-templates",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Modeles de NPC (script, warp, boutique, soigneur) au format snippet : texte rédigé pour ce projet, un modele n'est propose que pour les emulateurs sur lesquels il est verifie. Sans dependance UI, Tauri ni systeme de fichiers.",
+  "license": "GPL-3.0-only",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json"
+  },
+  "devDependencies": {
+    "@runeforge/emulator-core": "workspace:*",
+    "@runeforge/runescript-analysis": "workspace:*",
+    "@runeforge/runescript-core": "workspace:*",
+    "@runeforge/runescript-parser": "workspace:*"
+  }
+}

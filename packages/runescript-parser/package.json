@@ -1,0 +1,17 @@
+{
+  "name": "@runeforge/runescript-parser",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Parseur tolerant des scripts rAthena/Hercules : AST avec plages de source, recuperation d'erreurs, aucune execution.",
+  "license": "GPL-3.0-only",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json"
+  },
+  "dependencies": {
+    "@runeforge/runescript-core": "workspace:*"
+  }
+}

@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-pick-destination-folder"
+description = "Enables the pick_destination_folder command without any pre-configured scope."
+commands.allow = ["pick_destination_folder"]
+
+[[permission]]
+identifier = "deny-pick-destination-folder"
+description = "Denies the pick_destination_folder command without any pre-configured scope."
+commands.deny = ["pick_destination_folder"]

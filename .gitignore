@@ -1,0 +1,13 @@
+node_modules/
+dist/
+coverage/
+*.log
+
+# Rust / Tauri
+target/
+apps/desktop/src-tauri/gen/
+
+# Mises a jour signees : sortie de `pnpm release:prepare` et cles privees (jamais commitees ; seules les cles de TEST des fixtures le sont)
+release-out/
+*.key
+!crates/updater/tests/fixtures/keys/*.key

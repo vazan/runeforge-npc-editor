@@ -1,0 +1,14 @@
+{
+  "name": "@runeforge/deploy-core",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Deploiement de scripts vers une destination (RF-018) : plan sans effet (dry-run), sauvegarde, ecriture verifiee, restauration. Pur : aucune lecture de disque ni acces reseau, les acces passent par une interface que l'application fournit.",
+  "license": "GPL-3.0-only",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json"
+  }
+}

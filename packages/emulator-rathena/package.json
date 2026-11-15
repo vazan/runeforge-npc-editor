@@ -1,0 +1,19 @@
+{
+  "name": "@runeforge/emulator-rathena",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Adaptateur rAthena et bibliothèque intégrée de commandes; validation depuis les sources du serveur, détection renewal et règles de chargement.",
+  "license": "GPL-3.0-only",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./script-constants": "./src/script-constants-values.ts",
+    "./job-classes": "./src/job-classes-values.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json"
+  },
+  "dependencies": {
+    "@runeforge/emulator-core": "workspace:*"
+  }
+}

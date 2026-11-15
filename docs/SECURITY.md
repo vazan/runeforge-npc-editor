@@ -1,0 +1,167 @@
+# Sécurité
+
+> Ce qui est protégé, par quoi, et comment le vérifier. État du code au **2026-11-15**, sur **Windows 11** ; **Linux** : construit et testé sous Ubuntu 26.04 (WSL2), lancé 20 s sous WSLg seulement (ni interface ni E2E). Chaque affirmation renvoie au code, à un test ou à une commande que l'on peut
+> rejouer. **Aucune revue de sécurité externe n'a eu lieu** (`BLOCKED_EXTERNAL`) : ce document est un état des lieux, pas une certification.
+
+## Principes (CLAUDE.md §0, §14, §16)
+
+1. **Le code de l'utilisateur est du texte, jamais un programme.** Le parseur est pur : il ne lit que le texte qu'on lui donne, n'exécute rien et n'ouvre aucun fichier.
+2. **Aucune télémétrie.** Le réseau n'est utilisé que si l'utilisateur déclenche une fonction de connexion : les mises à jour ne contactent GitHub qu'après l'appui sur « Rechercher des mises à jour » (DEC-046, jamais au démarrage ni en arrière-plan) ; Git demeure local; la proposition IA (facultative) transmet le NPC affiché et le prompt, tandis que le générateur autonome transmet le prompt seul. Chaque demande exige un consentement et une destination hors boucle locale exige une confirmation distincte. La clé API est volatile et n'est jamais enregistrée. Le serveur de jeu n'est jamais lancé par l'application.
+3. **Le frontend ne manipule jamais de chemin absolu** : il ne connaît que des racines approuvées (identifiants opaques) et des chemins relatifs, validés et canonicalisés côté Rust (DEC-014).
+4. **Rien ne s'écrit sans action explicite**, et jamais par-dessus un fichier modifié ailleurs sans décision de l'utilisateur.
+5. Les privilèges sont **minimaux** : une seule fenêtre, vingt-sept commandes IPC nommées, aucune permission de plugin donnée au frontend.
+6. Un journal de diagnostic **n'existe que si l'utilisateur l'active**, ne contient que des **événements** (jamais de source, de chemin ni de message libre) et reste borné (DEC-037).
+
+## Surface IPC
+
+Fichier de capacités `apps/desktop/src-tauri/capabilities/default.json` : fenêtre `main` seulement ; **27 permissions d'application** + `core:event:allow-listen` et `core:event:allow-unlisten`. Aucune permission
+des plugins `dialog` ni `fs` n'est accordée au frontend (le plugin `dialog` n'est utilisé que par une commande Rust). Un test Rust (`commands::tests::capability_matches_command_list`) vérifie que la capacité accorde **exactement** les commandes listées dans
+`src/command_names.rs` : une commande ajoutée sans être déclarée, ou accordée sans exister, fait échouer `cargo test`.
+
+| Commande | Rôle | Garde-fous |
+|---|---|---|
+| `app_info` | version, plateforme | lecture seule |
+| `pick_project_folder` | dialogue natif de choix d'un dossier | seule voie d'approbation d'une racine nouvelle ; la racine est canonicalisée (liens résolus), doit être un dossier existant |
+| `list_recent_projects`, `forget_recent_project` | projets récents | liste locale ; l'oubli n'efface aucun fichier |
+| `open_recent_project` | rouvre un projet déjà choisi | **refuse un chemin absent de la liste des récents** (`UnknownRoot`) ; ré-approuve après canonicalisation |
+| `scan_project` | parcours de l'arbre | motifs d'inclusion/exclusion ; au plus 200 000 fichiers et 64 niveaux |
+| `read_files` | lecture de fichiers (octets) | racine approuvée + chemin relatif validé ; 20 Mio par fichier par défaut |
+| `write_file` | écriture atomique | précondition (empreinte du fichier lu) : refuse d'écraser un fichier modifié ailleurs ; fichier temporaire puis remplacement ; octets préservés |
+| `create_directory` | création d'un dossier | parent existant et dans la racine |
+| `recovery_save/list/read/clear`, `history_list/read` | instantanés de récupération et historique local | clés validées (`rejects_unsafe_keys`, `rejects_unsafe_identifiers`), stockés dans le dossier de données de l'application |
+| `config_get`, `config_set` | réglages de l'application | **noms en liste blanche** (`config_names_are_whitelisted`), 1 Mio au plus |
+| `set_dirty`, `confirm_exit` | fermeture de la fenêtre avec des modifications | n'agissent que sur l'état de la fenêtre |
+| `git_status`, `git_head_file` | état Git du projet (branche, fichiers modifiés) et contenu d'un fichier dans `HEAD` | **lecture seule** ; refusés (`not_trusted`) tant que l'utilisateur n'a pas autorisé Git pour ce projet — l'accord est retenu par le cœur natif (`git-trust.json`, hors de portée de la page et jamais lu dans le projet) ; racine approuvée + chemin relatif validé ; un seul `git` à la fois ; voir « Git » plus bas |
+| `log_event` | une ligne du journal de diagnostic local | Relit le réglage enregistré à chaque événement et écrit uniquement si le journal est activé. Rust vérifie le niveau, le code et les champs attendus. Les valeurs se limitent à des compteurs bornés, des booléens et des valeurs prédéfinies. |
+| `update_check` | cherche une mise à jour dans les releases d'un dépôt GitHub (DEC-046) | ne lit ni n'écrit rien sur le disque ; dépôt, canal et jeton validés avant tout envoi ; la page ne décide de rien : tout vient du **manifeste signé** ; voir « Mises à jour signées » |
+| `update_install` | télécharge, vérifie et installe la mise à jour du dernier contrôle, puis redémarre | n'installe que ce qu'un contrôle a vérifié ; **boîte de dialogue du système** que la page ne peut ni afficher ni valider ; refusée tant que des modifications ne sont pas enregistrées (avant et après le téléchargement) |
+| `e2e_project` | crochet des tests | ne rend quelque chose que dans une construction avec la fonctionnalité `e2e` (`#[cfg(feature = "e2e")]`) : **jamais dans une version distribuée** |
+
+## Chemins et fichiers
+
+`crates/filesystem` (42 tests Rust) refuse, avant toute opération : chemin vide, trop long (1 024 octets) ou absolu ; segments vides, `.` et `..` ; segment de plus de 255 octets ; caractères de contrôle et `< > : " | ? *`
+(ce qui exclut aussi les flux de données alternatifs NTFS `fichier:flux`) ; noms finissant par un espace ou un point ; noms de périphériques Windows (`con`, `nul`, `com1`…). Puis `resolve_existing` suit les liens
+et **vérifie que le chemin canonique reste dans la racine** (un lien symbolique vers l'extérieur est refusé : `symlink_escaping_the_root_is_rejected`) ; `resolve_new` exige un parent existant dans la racine et refuse
+d'écraser une entrée existante (liens compris). L'écriture est atomique (fichier temporaire nommé avec l'identifiant du processus, puis remplacement) ; le codec d'encodage préserve BOM, encodage hérité et fins de ligne
+(aller-retour octet pour octet sur 2 303 fichiers réels : `scripts/roundtrip-report.ts`).
+
+## Contenu de la page (CSP)
+
+Production (`tauri.conf.json`) : `default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; font-src 'self' data:; img-src 'self' data:; worker-src 'self'; connect-src ipc: http://ipc.localhost https: http: http://localhost:* http://127.0.0.1:*`.
+- **Pas de `unsafe-eval` ni de script en ligne** ; les workers viennent de l'application. `style-src 'unsafe-inline'` est accepté pour Monaco (DEC-016) et ne permet pas d'exécuter de code.
+- `connect-src` autorise le canal IPC, HTTPS et le schéma HTTP afin de permettre un fournisseur local configurable. La CSP ne restreint donc pas les hôtes HTTP; le client IA, lui, n'accepte HTTP que pour `localhost`, la boucle locale ou IPv4 privée et exige un consentement distinct hors boucle locale. Le schéma HTTP n'est pas chiffré, et cette différence entre la portée CSP et le contrôle applicatif exige une revue indépendante avant diffusion.
+- La construction de développement (`devCsp`) autorise aussi Vite : elle n'est pas distribuée.
+
+## Git (lecture seule, après accord)
+
+Git est le **seul** programme que l'application lance, et seulement quand l'utilisateur ouvre l'onglet Git ou compare un fichier avec `HEAD`. Tout passe par `crates/git` (`grep -rn "Command::new" crates apps/desktop/src-tauri/src` : un seul lancement, `crates/git/src/process.rs`).
+
+| Risque | Mesure | Preuve |
+|---|---|---|
+| Un dossier reçu d'un tiers déclare, dans `.git/config`, un programme que `git status` exécute (surveillance de fichiers `core.fsmonitor`, filtres `filter.x.clean`) | **Accord explicite par projet** (boîte « Activer Git pour ce projet ? », refus par défaut) avant toute exécution ; l'accord est enregistré par le cœur natif dans `git-trust.json` (dossier de configuration de l'application), **jamais** dans le projet ni accessible à la page (`config_get`/`config_set` ont une liste blanche) ; `core.fsmonitor=false` imposé | `commands::tests::git_is_refused_until_the_user_grants_it_for_that_project`, `the_git_trust_document_is_out_of_reach_of_the_page` ; `crates/git` `does_not_run_the_program_a_repository_configures_to_watch_its_files` (contrôle : un `git status` ordinaire exécute ce programme, pas le produit) ; E2E « Git » (même contrôle sur l'exécutable réel) |
+| Variables d'environnement qui détournent git (`GIT_DIR`, `GIT_EXTERNAL_DIFF`, `GIT_SSH_COMMAND`, `GIT_ASKPASS`, `PAGER`…) | environnement **vidé** ; liste blanche de 18 variables (de quoi trouver `git` et sa configuration globale) ; `GIT_TERMINAL_PROMPT=0`, `GIT_PAGER=cat`, `LC_ALL=C` imposés | `the_child_environment_keeps_only_the_allowed_variables_and_forces_its_own` |
+| Écriture dans le dépôt de l'utilisateur | `--no-optional-locks` et `GIT_OPTIONAL_LOCKS=0` : ni verrou ni réécriture de l'index ; **aucune** commande qui modifie (seulement `rev-parse`, `status`, `cat-file`) ; sous-modules ignorés (autre dépôt, autre configuration) | `status_does_not_write_anything_in_the_repository` (index identique octet pour octet, pas de `index.lock`) ; E2E (même contrôle) |
+| Injection par un nom de fichier | aucun shell ; arguments passés un par un ; chemin validé comme tous les chemins de l'application (`..`, absolu, `:`, noms réservés refusés) puis préfixé de `HEAD:` | `head_file_refuses_unsafe_paths_before_running_git` |
+| `git` qui se bloque ou noie la mémoire | délai de 15 s et sortie bornée (8 Mio pour le statut, 20 Mio par fichier) : au-delà, le processus est tué ; un descendant qui garde les tubes ouverts n'est attendu que 2 s | `kills_a_program_that_runs_too_long`, `stops_a_program_that_writes_too_much` |
+| Page qui inonderait la commande | un seul `git` à la fois (verrou) ; la liste est limitée à 5 000 fichiers | `MAX_ENTRIES`, `truncates_at_the_limit_and_says_so` |
+| Fuite d'information par un message d'erreur | aucun message de `git` n'est renvoyé (il peut contenir des chemins) : seulement un code (`not_a_repository`, `unsafe_repository`, `timeout`…) | `recognises_what_failed_from_git_messages_without_keeping_them` |
+
+**Non neutralisé** : si l'utilisateur autorise un dépôt dont la configuration locale déclare un **filtre** (`filter.x.clean`, appliqué par `git status` aux fichiers qui le demandent par `.gitattributes`) ou un autre programme que `git status` peut lancer, ce programme s'exécute. C'est le risque que la boîte d'accord dit en toutes lettres ; la mesure est de n'autoriser que des projets de confiance. `safe.directory` n'est jamais contourné : un dépôt qui appartient à un autre utilisateur est refusé par git (`unsafe_repository`).
+
+## Mises à jour signées (DEC-046)
+
+L'application se met à jour depuis les **releases d'un dépôt GitHub** (privé ou non), **à la demande de l'utilisateur** (Paramètres › Mises à jour). Le principe : GitHub et le réseau sont des transports **non fiables** ; seul le **manifeste signé** par l'éditeur fait foi, avec une clé publique **embarquée dans l'application** (`apps/desktop/src-tauri/update-public-key.txt`). Procédure de publication : [`RELEASE.md`](RELEASE.md).
+
+| Risque | Mesure | Preuve |
+|---|---|---|
+| Une release forgée (compte GitHub volé, dépôt compromis, homme du milieu) | La mise à jour n'est acceptée que si le manifeste porte une **signature minisign valide** (Ed25519) vérifiée par `minisign-verify` avec la clé publique embarquée ; la signature est vérifiée **avant** d'interpréter le manifeste ; sans clé configurée (`UNCONFIGURED`), toute mise à jour est refusée (`not_configured`) | `crates/updater` : `a_manifest_altered_after_signing_is_refused`, `a_manifest_signed_by_another_key_is_refused_and_an_older_release_is_not_offered_instead`, `without_a_public_key_nothing_is_checked` ; E2E « une signature d'une autre clé est refusée avant tout téléchargement de l'exécutable » ; une seconde implémentation indépendante (Node : Ed25519 + BLAKE2b) est d'accord avec le vérificateur Rust sur toutes les fixtures |
+| Un exécutable remplacé après signature | Le manifeste signé porte la **taille** et le **SHA-256** de l'exécutable ; le fichier est téléchargé à côté de l'application, haché au fil de l'eau, puis comparé (taille, SHA-256, en-tête propre au système : `MZ` pour `windows-*`, `\x7fELF` pour `linux-*`, DEC-047) **avant** toute mise en place ; en cas d'écart il est supprimé | `refuses_a_file_that_does_not_match_the_signed_digest_size_or_type`, `a_download_longer_or_shorter_than_the_signed_size_is_refused`, `a_signed_file_that_is_not_the_executable_of_its_system_is_refused` (un PE signé pour Linux, un ELF signé pour Windows) ; E2E « un exécutable altéré après signature est détecté, supprimé, et l'application reste intacte » |
+| Retour en arrière (réinstaller une vieille version vulnérable) | Seule une version **strictement plus récente** est proposée ; l'étiquette de la release et son indicateur « pre-release » doivent concorder avec la version et le canal **du manifeste signé** ; si la release la plus récente a une signature invalide, c'est une erreur (jamais de repli sur une plus ancienne) | `the_release_tag_and_flags_must_agree_with_the_signed_manifest`, `the_stable_channel_ignores_a_beta_release_and_the_beta_channel_takes_the_newest`, tests de `release.rs` |
+| Fuite du jeton d'accès d'un dépôt privé | Jeton **en mémoire** (contrôleur), jamais dans les réglages, l'état affiché, le journal ni un fichier ; format imposé (`[A-Za-z0-9_-]`, 255 au plus : il part dans un en-tête HTTP) ; envoyé **seulement** à `api.github.com`, jamais aux redirections (le stockage des fichiers est joint par une adresse signée) ; les messages d'erreur ne contiennent ni jeton ni adresse | `the_token_goes_to_the_api_only_never_to_the_redirected_storage`, `the_token_is_sent_to_the_api_only_never_to_the_file_storage`, `update-controller.test.ts` (« ne laisse jamais le jeton… »), E2E (le jeton n'est écrit dans aucun fichier du dossier de données) |
+| Redirection vers un hôte hostile, adresse piégée | Première requête : `https://api.github.com` seulement ; redirections (5 au plus) seulement vers HTTPS, port 443, `github.com`, `api.github.com` ou `*.githubusercontent.com` ; adresses avec identifiants ou relatives refusées ; les adresses des fichiers sont **construites** à partir de l'identifiant numérique, jamais copiées de la liste ; `ureq` ne suit aucune redirection de lui-même | `refuses_a_first_request_that_is_not_the_https_api`, `refuses_a_redirect_to_another_host_a_plain_http_address_or_a_lookalike`, `follows_a_few_redirects_but_not_a_loop`, `tests/http.rs` (serveur HTTP local : `does_not_follow_a_redirect_by_itself_it_reports_where_it_points`, `production_mode_refuses_plain_http_before_connecting`) |
+| Page compromise qui déclencherait une installation | La page n'envoie que dépôt, canal et jeton : elle ne voit **jamais** un octet de la mise à jour ; l'installation exige un contrôle préalable réussi, une **boîte de dialogue du système** que la page ne peut ni afficher ni valider, et des documents enregistrés | E2E : `no_pending_update` et `unsaved_changes` sont refusés par le cœur natif sans aucune requête |
+| Mise à jour interrompue ou échouée | L'exécutable en place n'est pas touché avant la vérification ; les fichiers laissés (`.download`, `.new`, `.old`) sont supprimés au démarrage. **Windows** : renommages dans le dossier de l'application avec **retour arrière**, chacun retenté 6 fois (un antivirus ouvre souvent un exécutable tout juste écrit). **Linux** : **un seul `rename` atomique** au-dessus de l'exécutable (le processus en cours garde son ancien fichier, le chemin n'est jamais absent, il n'y a donc pas de retour arrière à rater), après une copie de secours `.old` (lien dur, sinon copie) | `install.rs` (retour arrière, étapes qui échouent, nettoyage, reprises ; `the_atomic_replacement_swaps_the_file_in_one_rename_and_keeps_the_previous_version_aside`, `the_application_is_untouched_when_no_backup_can_be_made_or_the_swap_fails`) ; `tests/running_replace.rs` (remplacement d'une copie **réellement en cours d'exécution**, sous Windows et sous Linux) ; E2E Windows (remplacement d'un exécutable en cours d'exécution, redémarrage, nettoyage de `.old`) |
+| Mauvais exécutable pour le système, système non pris en charge | Le manifeste signé a **une entrée par plateforme** (`<os>-<arch>`) et l'application ne lit que la sienne : une release qui ne la porte pas est signalée (`no_platform_asset`), jamais remplacée par une autre ; sur un système sans algorithme d'installation (macOS, FreeBSD…) **rien n'est téléchargé** (`unsupported_platform`) | `linux_downloads_and_verifies_an_elf_executable_and_never_touches_the_windows_file`, `an_architecture_the_release_does_not_carry_is_reported_and_so_is_a_windows_only_release_on_linux`, `a_system_the_updater_cannot_install_downloads_nothing`, `platform.rs` ; l'outillage refuse de signer un exécutable dont l'en-tête n'est pas celui de sa plateforme (`scripts/release/release.test.ts`) |
+| Droits du fichier remplacé (Linux) | Les droits de l'ancien fichier (dont le bit d'exécution, que GitHub ne conserve pas) sont recopiés sur le nouveau **avant** le renommage ; si ils ne peuvent pas l'être, rien n'est remplacé | `the_new_file_takes_the_permissions_of_the_old_one_including_the_execute_bit`, `nothing_is_replaced_when_the_current_executable_cannot_be_read`, `the_replaced_file_keeps_the_permissions_of_the_old_one` (exécutés sous Linux) |
+| Notes de version hostiles | Texte brut (jamais HTML ni Markdown), 8 Kio au plus, sans caractère de contrôle ; affiché comme du texte | `manifest.rs`, `UpdatesTab.test.tsx`, E2E (« les notes sont du texte ») |
+| Clé de test utilisée pour signer une release | Les clés de test sont publiques dans le dépôt ; un test Rust échoue si la clé de production est celle de test ; `release:prepare` refuse un exécutable qui embarque une clé de test (construction `e2e`) | `update::tests::the_distributed_key_is_never_the_test_key_and_is_either_unconfigured_or_a_real_key`, `scripts/release/release.test.ts` |
+
+**Réseau** : le seul client HTTP est `ureq`, utilisé par `crates/updater` seulement, avec la pile TLS du système et son magasin de certificats (`native-tls` : schannel sous Windows, OpenSSL sous Linux ; `native-tls-no-default`, donc **aucune liste d'autorités embarquée** dans l'exécutable — c'est le système de l'utilisateur qui dit à qui faire confiance, et ses correctifs de sécurité sont ceux de sa distribution). Délais : 10 s de connexion, 30 s sans octet reçu, 15 min au plus par téléchargement. Réponses bornées : 2 Mio pour la liste, 64 Kio pour le manifeste, 4 Kio pour la signature, 256 Mio pour l'exécutable.
+
+**Non traité ou non vérifié** :
+- **Le TLS réel vers `api.github.com`, les redirections de téléchargement d'un dépôt privé et les limites de débit de GitHub n'ont pas été exercés** : les tests utilisent un faux GitHub en mémoire (`crates/updater/tests/flow.rs`) et un serveur HTTP local (`tests/http.rs`, E2E). À vérifier une fois avec une release réelle (`RELEASE.md`, « Premier contrôle réel »).
+- **Un jeton qui lit les releases d'un dépôt privé lit aussi son code source.** Si ce n'est pas voulu, publier les versions dans un dépôt distinct réservé aux versions (voir `RELEASE.md`).
+- **La clé privée de signature est le secret le plus sensible du produit** : qui la détient avec son mot de passe peut publier une mise à jour acceptée par toutes les installations. Sa garde est une action du propriétaire (`release:keygen` n'écrit jamais dans le dépôt). Sa perte ou son remplacement coupe les mises à jour des exemplaires déjà distribués.
+- **Pas de signature de code Windows** (certificat du propriétaire) : l'exécutable remplacé n'est garanti que par le manifeste signé, pas par Authenticode ; SmartScreen peut avertir au premier lancement d'un exécutable téléchargé à la main.
+- La seconde vérification des modifications non enregistrées (**après** le téléchargement) n'a pas de test automatisé : la commande exige un contexte Tauri. La première est testée par l'E2E.
+- Quatre mutations du code de vérification n'ont pas été détectées, faute de différence observable : la comparaison de la taille reçue (redondante avec le SHA-256), la garde de taille de l'exécutable (déjà imposée par le manifeste, donc inatteignable), le refus anticipé d'un `Content-Length` trop grand (l'arrêt en cours de lecture donne le même résultat) et le refus des signatures minisign de l'ancien mode (aucun vecteur de test ; une telle signature n'est de toute façon produite que par le détenteur de la clé).
+- **Linux** (DEC-047) : le code d'installation, le contrôle ELF, le client TLS (OpenSSL) et l'outillage de release ont été compilés et testés sous Ubuntu 26.04 (WSL2) ; **aucune mise à jour n'a été déroulée dans l'application sous Linux** (pas de fenêtre, pas d'E2E), et le TLS réel vers GitHub n'y a pas plus été essayé. Si la variable d'environnement `APPIMAGE` est définie, c'est le fichier qu'elle désigne qui est remplacé (comportement de `tauri::process::current_binary`, jamais essayé : aucun AppImage n'est produit) ; l'environnement du processus est considéré comme sûr (un attaquant qui le contrôle peut déjà remplacer l'exécutable). Sur tout autre système (macOS, FreeBSD…), `update_install` rend `unsupported_platform`.
+- **Sauvegarde `.old` périmée liée à l'exécutable (Linux)** : une tentative interrompue entre le lien dur et le renommage laisse `.old` **lié au même fichier** que l'exécutable. Observé sous Linux : `std::fs::copy(a, b)` quand `b` est un lien dur vers `a` rend `Ok(0)` et **tronque le fichier à 0 octet**, sans erreur. Le code retire donc la sauvegarde périmée avant de la refaire (`install.rs`, `apply_atomic_with`), et le test `a_backup_left_by_an_interrupted_attempt_as_a_link_to_the_current_file_never_damages_it` le verrouille (c'est la seule mutation sur douze qu'aucun test existant ne détectait : voir `STATUS.md`). **Cas résiduel non traité** : si cette suppression elle-même échoue (attribut immuable sur `.old`, dossier à bit collant appartenant à un autre utilisateur) alors que `.old` est le même fichier que l'exécutable, la copie de secours de repli écrirait dans l'exécutable ; jamais observé, extrêmement improbable pour un exécutable installé par l'utilisateur dans son propre dossier.
+
+## Réseau, télémétrie, processus
+
+Vérifié le 2026-11-15 :
+- **Rust** : le seul plugin enregistré est `tauri-plugin-dialog` (`main.rs`). Pour la cible Windows, **le seul client HTTP lié est `ureq`**, et seul `crates/updater` l'utilise (`cargo tree --offline -i ureq --target x86_64-pc-windows-msvc -e normal` : `runeforge-updater` → `runeforge-studio`), avec la pile TLS du système (`native-tls` → `schannel`). `reqwest`, `hyper`, `openssl`, `ring` et `aws-lc-rs` ne sont pas liés pour Windows (`cargo tree -i …` : « nothing to print » ou aucun paquet de ce nom), pas plus que `rustls` (seul le crate de types `rustls-pki-types` l'est). `reqwest` et `hyper` figurent dans `Cargo.lock` pour d'autres plateformes. **Linux** (relevé du 2026-11-15, Ubuntu 26.04 sous WSL2, mêmes commandes `cargo tree --offline -i … -e normal`) : `ureq` n'est lié que par `runeforge-updater` ; la pile TLS est **OpenSSL** (`openssl` 0.10.82 ← `native-tls` 0.2.18 ← `ureq`) ; `reqwest` et `hyper` ne sont pas liés ; `rustls`, `ring`, `aws-lc-rs` et `webpki-root-certs` ne figurent même pas dans `Cargo.lock` (seul `rustls-pki-types`, un crate de types, y est) ; `runeforge-updater` lie 54 caisses. Le seul `Command::new` du code du projet est celui de `crates/git` (voir « Git ») ; `std::process::id()` sert à nommer un fichier temporaire. `git` est lancé sans réseau : `status`, `rev-parse` et `cat-file` n'en ouvrent aucun.
+- **TypeScript** : les mises à jour n'utilisent aucun `fetch` (tout passe par le cœur natif, voir plus haut). La fonction IA utilise `fetch` seulement après consentement; l'URL est HTTPS ou HTTP vers la boucle locale ou une adresse IPv4 privée, sans identifiants, paramètres ni redirections. Une URL de base est complétée par `/chat/completions`. Le fournisseur envoie le modèle et le prompt, plus le NPC affiché uniquement en mode proposition; aucune autre donnée du projet n'est ajoutée. Une clé saisie est envoyée comme Bearer, sans être enregistrée. HTTP n'est pas chiffré. La CSP Tauri autorise le schéma `http:` pour les fournisseurs locaux configurables; le contrôle applicatif rejette les hôtes HTTP publics, mais la portée plus large de la CSP demeure à réviser indépendamment. Aucune télémétrie ni aucun `child_process`.
+- **Télémétrie** : aucun code d'analyse ; le seul texte qui en parle est l'engagement affiché dans les réglages (« Aucune télémétrie. Aucun accès réseau… »).
+- **Code `unsafe`** : aucun dans `crates/` ni `apps/desktop/src-tauri/src`.
+- **Journaux** : **aucun journal n'est écrit par défaut** (l'E2E vérifie qu'aucun fichier n'existe tant que le réglage n'est pas activé, après toutes les étapes qui précèdent). Si l'utilisateur coche « Écrire un journal de diagnostic local » (Paramètres › Confidentialité),
+  `runeforge.log` reçoit des **événements** — `LOG_ENABLED`, `PROJECT_OPENED files=…`, `INDEX_DONE files=… functions=… npcs=… ms=…`, `SAVE_CONFLICT`, `SAVE_FAILED code=…`, `RECOVERY_OFFERED count=…`, `UI_ERROR name=…`,
+  `UI_REJECTION name=…` — sans source, chemin, nom de fichier ni de fonction, ni message d'erreur. Rust vérifie le schéma de chaque événement et accepte seulement des noms de classes d’erreurs standard ou `unknown`. Le fichier est
+  limité à 512 Kio plus une génération précédente (`runeforge.log.1`). Décocher la case arrête l'écriture aussitôt. Aucun envoi : le journal ne quitte jamais la machine (DEC-037).
+- **Assistants de NPC** (RF-017) : ils ne produisent que du **texte** à partir de la saisie ; ils n'ajoutent aucune commande IPC. Copier, ajouter au fichier ouvert et créer un fichier sont des actions explicites ; le contenu
+  reste « modifié » jusqu'à l'enregistrement explicite (Ctrl+S) et le fichier créé ne remplace jamais un fichier existant (`mustNotExist`).
+
+## Données stockées localement
+
+| Donnée | Où | Sensibilité |
+|---|---|---|
+| Configuration du projet `.runeforge/project.json` | dans le projet de l'utilisateur, écrite **seulement** sur action explicite (réglages, action rapide « déclarer ») | aucun secret ; jamais de mot de passe ni de clé |
+| Réglages, projets récents, session | dossier de données de l'application | chemins de dossiers (informatif) |
+| Fournisseur IA (URL de base et modèle) | réglages locaux de l'application | adresse du service choisi; aucune clé API |
+| Instantanés de récupération, historique local | dossier de données de l'application | **contiennent du code source de l'utilisateur** : même sensibilité que ses scripts |
+| Projets pour lesquels Git est autorisé (`git-trust.json`) | dossier de configuration de l'application | identifiants de projets (empreintes de chemins), 500 au plus ; jamais dans le projet |
+| Journal de diagnostic `logs/runeforge.log` (+ `.1`), **seulement si activé** | dossier de données locales de l'application | événements (compteurs, codes) sans source ni chemin ; 512 Kio au plus par fichier |
+| Clé API IA | mémoire du panneau pendant sa durée de vie; supprimée après chaque tentative d'envoi | non persistée par l'application; envoyée comme Bearer si saisie, avec le prompt et, en mode proposition seulement, le NPC, après consentement |
+| Dépôt et canal des mises à jour | réglages locaux de l'application | nom d'un dépôt public ou privé (`proprietaire/depot`) et `stable`/`beta` ; aucun jeton |
+| Jeton d'accès GitHub des mises à jour | mémoire du contrôleur, jusqu'à la fermeture de l'application | **jamais enregistré** (ni réglages, ni journal, ni état affiché) ; envoyé seulement à `api.github.com` comme Bearer ; lit aussi le code source d'un dépôt privé (voir « Mises à jour signées ») |
+| Exécutable en cours de mise à jour (`.download`, `.new`, `.old`) | à côté de l'exécutable de l'application | supprimés au démarrage suivant |
+
+Aucun stockage sécurisé de clé API par le système d'exploitation n'est fourni : les clés restent en mémoire et ne sont pas enregistrées.
+
+## Menaces et mesures (CLAUDE.md §16.1)
+
+| Menace | Mesure | Preuve |
+|---|---|---|
+| Projet fourni par un tiers (scripts piégés) | le texte n'est jamais exécuté ; le parseur est tolérant et borné (diagnostics de syntaxe plafonnés à 1 000 par fichier, rapport à 5 000 problèmes) | tests de propriété du parseur (aucun plantage, aucune perte), 0 plantage sur ~2 300 fichiers réels |
+| Chemins malveillants, traversée, liens | validation + canonicalisation + racine approuvée (voir plus haut) | 42 tests Rust |
+| Fichiers énormes | lecture limitée (20 Mio), parcours limité (200 000 fichiers, 64 niveaux), configuration limitée (1 Mio) | tests Rust |
+| Écrasement d'un fichier modifié ailleurs | précondition d'empreinte à l'écriture, dialogue de conflit | E2E « conflit sans écrasement silencieux » |
+| Fuite de code ou de chemins par le journal | Journal facultatif, champs prédéfinis validés en Rust et taille bornée. | Tests Rust (`log.rs`, `commands.rs`) et `controller-log.test.ts`. |
+| Script d'assistant qui écraserait un fichier | création en `mustNotExist`, contenu non enregistré tant que l'utilisateur n'enregistre pas | `controller-wizard.test.ts`, E2E « assistant de NPC » |
+| Envoi involontaire d'un script ou d'un prompt à un fournisseur IA | consentement précis avant chaque envoi; confirmation distincte hors boucle locale; prompt seul en mode génération; aperçu et validation locale avant création d'un nouveau fichier; clé temporaire | `ai.test.ts`, `AIProposalPanel.test.tsx`; tests simulés, fournisseur réel non vérifié; revue indépendante de la CSP requise |
+| Dépendances compromises | `pnpm-lock.yaml` et `Cargo.lock` versionnés, installation avec lockfile ; inventaire des licences (`docs/LEGAL.md`) | `scripts/licenses-report.ts` |
+| Serveur de jeu | **jamais lancé** par l'application ; ses fichiers sont lus seuls, en lecture seule | `real-server-smoke.ts` : « dossier .runeforge créé dans le serveur ? false » |
+| Plugins et exécution contre un serveur de test | **n'existent pas encore** : à concevoir avec permissions explicites et isolation (CLAUDE.md §13-14) | — |
+
+## Ce qui n'est pas fait
+
+- **Audit des vulnérabilités connues** (`pnpm audit`, `cargo audit`) : exige le réseau (base d'avis) — **`BLOCKED_EXTERNAL`** tant que l'utilisateur n'a pas autorisé l'accès ; à exécuter avant toute distribution.
+- **Revue de sécurité externe**, test d'intrusion, analyse du paquet distribué : non faits.
+- **Mise à jour signée** : elle existe (DEC-046), sans plugin d'actualisation (code du projet : `crates/updater`), mais **la clé de signature de production n'existe pas encore** (`pnpm release:keygen`, action du propriétaire) et **aucune release réelle n'a été publiée ni vérifiée de bout en bout** (voir « Mises à jour signées »). **Signature de code Windows** : `BLOCKED_EXTERNAL` (certificat du propriétaire).
+- **Linux** : l'application n'a été lancée que 20 secondes sous WSLg (elle démarre, DEC-048) ; capacités, CSP et comportement de WebKitGTK non testés. L'exécutable lie dynamiquement GTK 3, WebKitGTK 4.1, libsoup 3, glibc et OpenSSL 3 : leurs mises à jour de sécurité sont celles de la distribution de l'utilisateur, pas celles de RuneForge.
+- La fonctionnalité `e2e` ne doit **jamais** figurer dans un paquet distribué : à contrôler dans la procédure de livraison (`RELEASE_CHECKLIST.md`).
+
+## Rejouer les vérifications
+
+```bash
+pnpm check:all                                   # typecheck, ESLint, Vitest, clippy -D warnings, cargo test (dont la cohérence capacité/commandes)
+cargo tree --offline -i ureq --target x86_64-pc-windows-msvc -e normal   # le seul client HTTP : runeforge-updater → runeforge-studio
+cargo tree --offline -i reqwest --target x86_64-pc-windows-msvc -e all   # « nothing to print » : ni reqwest ni hyper pour Windows
+cargo test -p runeforge-updater                  # mises à jour : signature, canaux, jeton, redirections, empreinte, retour arrière, vrai HTTP local
+pnpm exec vitest run scripts/release             # outillage de release : manifeste, signature, refus avant publication
+grep -rn "Command::new" crates apps/desktop/src-tauri/src --include=*.rs     # un seul lancement de processus : crates/git/src/process.rs (hors tests)
+cargo test -p runeforge-git                      # git en lecture seule : environnement, délais, vrais dépôts (ignorés si git est absent)
+pnpm exec tsx scripts/licenses-report.ts          # inventaire des licences (hors ligne)
+pnpm e2e                                         # le scénario principal puis les mises à jour (faux serveur GitHub local) sur l'exécutable réel, dont le contrôle de la console et de la CSP
+```

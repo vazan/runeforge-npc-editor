@@ -1,0 +1,142 @@
+# CI RuneForge Studio - le projet est a la racine du depot (plus de dossier `Software/`, voir docs/DECISIONS.md DEC-048).
+# ECRITE MAIS PAS ENCORE EXECUTEE SUR UN RUNNER GITHUB (voir docs/DECISIONS.md DEC-013) : les memes commandes
+# ont ete rejouees a la main sous Windows 11 et sous Ubuntu 26.04 (WSL2), voir docs/STATUS.md.
+name: ci
+
+on:
+  pull_request:
+  push:
+    branches: [master, main]
+
+jobs:
+  check:
+    name: Verifications TypeScript (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, ubuntu-latest]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Installer les dependances (lockfile fige)
+        run: pnpm install --frozen-lockfile
+
+      - name: Typecheck, lint et tests
+        run: pnpm check
+
+      - name: Build du frontend
+        run: pnpm build
+
+  rust:
+    name: Rust (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, ubuntu-latest]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Dependances systeme Linux (WebKitGTK)
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev build-essential curl wget file libxdo-dev libssl-dev libayatana-appindicator3-dev librsvg2-dev
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy
+
+      - uses: Swatinem/rust-cache@v2
+
+      - run: pnpm install --frozen-lockfile
+
+      # Le build.rs de l'application Tauri attend le frontend construit (frontendDist).
+      - name: Build du frontend
+        run: pnpm build
+
+      - name: Clippy et tests Rust
+        run: pnpm rust:check
+
+  desktop-build:
+    name: Build Tauri (${{ matrix.os }})
+    needs: [check, rust]
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            artifact: runeforge-studio-windows-x64
+            binary: target/release/runeforge-studio.exe
+          - os: ubuntu-latest
+            artifact: runeforge-studio-linux-x64
+            binary: target/release/runeforge-studio
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Dependances systeme Linux (WebKitGTK)
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev build-essential curl wget file libxdo-dev libssl-dev libayatana-appindicator3-dev librsvg2-dev
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - uses: Swatinem/rust-cache@v2
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Build de l'executable (sans installateur)
+        run: pnpm --filter @runeforge/desktop tauri build --no-bundle
+
+      # Executable brut, NON signe et sans installateur : pour essai seulement (voir docs/RELEASE_CHECKLIST.md).
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.artifact }}
+          path: ${{ matrix.binary }}
+          if-no-files-found: error
+
+  e2e-windows:
+    name: E2E Windows (WebView2)
+    needs: [check, rust]
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - run: pnpm install --frozen-lockfile
+      - name: E2E (construit la variante `e2e`, lance le scenario)
+        run: pnpm e2e
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: e2e-captures
+          path: target/e2e-artifacts

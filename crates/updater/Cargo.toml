@@ -1,0 +1,22 @@
+[package]
+name = "runeforge-updater"
+version = "0.0.0"
+description = "Mises a jour signees de l'application : releases d'un depot Git (prive ou non), manifeste signe, telechargement verifie et remplacement de l'executable"
+edition.workspace = true
+publish.workspace = true
+license.workspace = true
+
+[dependencies]
+base64 = "0.23.1"
+minisign-verify = "0.3.0"
+semver = "1.0.28"
+serde = { version = "1.0.229", features = ["derive"] }
+serde_json = "1.0.154"
+sha2 = "0.11.1"
+thiserror = "2.0.21"
+# `native-tls-no-default` : le TLS du systeme (schannel sous Windows, OpenSSL sous Linux) SANS la liste de certificats racine de Mozilla que
+# la fonctionnalite `native-tls` embarque en plus (`webpki-root-certs`) et dont ce produit ne se sert jamais (`RootCerts::PlatformVerifier`).
+ureq = { version = "3.5.2", default-features = false, features = ["native-tls-no-default"] }
+
+[dev-dependencies]
+tempfile = "3.27.0"

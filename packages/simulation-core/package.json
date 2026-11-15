@@ -1,0 +1,18 @@
+{
+  "name": "@runeforge/simulation-core",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Simulation locale d'un dialogue de NPC (RF-024) sans dependance UI : un interprete borne du langage de script qui execute le dialogue et l'etat du joueur de test, et signale chaque effet qu'il ne simule pas.",
+  "license": "GPL-3.0-only",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json"
+  },
+  "dependencies": {
+    "@runeforge/runescript-core": "workspace:*",
+    "@runeforge/runescript-parser": "workspace:*"
+  }
+}

@@ -1,0 +1,20 @@
+{
+  "schema": 1,
+  "product": "runeforge-studio",
+  "version": "0.5.0",
+  "channel": "stable",
+  "publishedAt": "2026-11-15T10:00:00Z",
+  "notes": "Notes de la 0.5.0.\nDeuxieme ligne.",
+  "platforms": {
+    "windows-x86_64": {
+      "file": "runeforge-studio-0.5.0-windows-x86_64.exe",
+      "size": 3042,
+      "sha256": "5933a6d12d061d92c054d73338ac3cba966f3a6a92bdef210024bbff8aaea727"
+    },
+    "linux-x86_64": {
+      "file": "runeforge-studio-0.5.0-linux-x86_64",
+      "size": 3524,
+      "sha256": "4f9711f1c1f508d57a2e2eebe41d5ef5b98fb99357b0e590f3419a1137fc8c42"
+    }
+  }
+}

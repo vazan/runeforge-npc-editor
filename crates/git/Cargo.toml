@@ -1,0 +1,14 @@
+[package]
+name = "runeforge-git"
+version = "0.0.0"
+description = "Etat Git d'un projet en lecture seule (statut, contenu de HEAD) par le programme git de la machine : lance sans shell, avec un environnement et des options durcis, borne en temps et en taille."
+edition.workspace = true
+publish.workspace = true
+license.workspace = true
+
+[dependencies]
+runeforge-filesystem = { path = "../filesystem" }
+serde = { version = "1.0.229", features = ["derive"] }
+
+[dev-dependencies]
+tempfile = "3.27.0"

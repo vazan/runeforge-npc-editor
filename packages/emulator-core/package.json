@@ -1,0 +1,14 @@
+{
+  "name": "@runeforge/emulator-core",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Noyau commun des adaptateurs d'emulateur : registre de commandes sourcees, notation des arguments, regles de chargement des scripts (scripts_*.conf). Sans dependance UI, Tauri ni systeme de fichiers.",
+  "license": "GPL-3.0-only",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json"
+  }
+}

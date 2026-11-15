@@ -1,0 +1,15 @@
+{
+  "schema": 1,
+  "product": "runeforge-studio",
+  "version": "0.5.1",
+  "channel": "stable",
+  "publishedAt": "2026-11-15T10:00:00Z",
+  "notes": "Notes de la 0.5.1.\nDeuxieme ligne.",
+  "platforms": {
+    "linux-x86_64": {
+      "file": "runeforge-studio-0.5.1-linux-x86_64",
+      "size": 1860,
+      "sha256": "8564701a7666eba7f03768452190163549fa887abc0f17f07262a42f4c9b5876"
+    }
+  }
+}

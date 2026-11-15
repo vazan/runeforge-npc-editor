@@ -1,0 +1,37 @@
+{
+  "name": "runeforge-studio",
+  "version": "0.0.0",
+  "private": true,
+  "description": "RuneForge Studio (nom de travail) - IDE desktop pour les scripts rAthena/Hercules",
+  "license": "GPL-3.0-only",
+  "type": "module",
+  "packageManager": "pnpm@10.33.0",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "generate:rathena-library": "tsx packages/emulator-rathena/lib/generate-script-library.ts",
+    "release:keygen": "tsx scripts/release/keygen.ts",
+    "release:prepare": "tsx scripts/release/prepare.ts",
+    "release:publish": "tsx scripts/release/publish.ts",
+    "typecheck": "pnpm -r --workspace-concurrency=1 typecheck",
+    "lint": "eslint .",
+    "test": "vitest run",
+    "build": "pnpm -r build",
+    "build:linux": "node scripts/build-linux.mjs",
+    "check": "pnpm typecheck && pnpm lint && pnpm test",
+    "rust:check": "cargo clippy --workspace --all-targets -- -D warnings && cargo test --workspace",
+    "check:all": "pnpm check && pnpm rust:check",
+    "e2e": "node scripts/e2e/run-all.mjs"
+  },
+  "devDependencies": {
+    "@eslint/js": "10.0.1",
+    "@types/node": "26.6.6",
+    "eslint": "10.14.0",
+    "eslint-plugin-react-hooks": "7.1.1",
+    "tsx": "4.23.15",
+    "typescript": "6.0.3",
+    "typescript-eslint": "8.72.1",
+    "vitest": "5.1.0"
+  }
+}

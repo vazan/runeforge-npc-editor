@@ -1,0 +1,28 @@
+[package]
+name = "runeforge-studio"
+version = "0.0.0"
+description = "RuneForge Studio - IDE desktop pour les scripts rAthena/Hercules"
+edition = "2021"
+publish = false
+license = "GPL-3.0-only"
+
+[dependencies]
+runeforge-filesystem = { version = "0.0.0", path = "../../../crates/filesystem" }
+runeforge-git = { version = "0.0.0", path = "../../../crates/git" }
+runeforge-remote-transport = { version = "0.0.0", path = "../../../crates/remote-transport" }
+runeforge-updater = { version = "0.0.0", path = "../../../crates/updater" }
+serde = { version = "1.0.229", features = ["derive"] }
+serde_json = "1.0.154"
+tauri = { version = "2.12.5", features = [] }
+tauri-plugin-dialog = "2.8.4"
+
+[build-dependencies]
+tauri-build = { version = "2.7.4", features = [] }
+
+[dev-dependencies]
+tempfile = "3.27.0"
+
+[features]
+# Construction de test E2E uniquement : permet de pre-approuver un dossier de projet via RUNEFORGE_E2E_PROJECT.
+# Jamais active dans une version distribuee.
+e2e = []

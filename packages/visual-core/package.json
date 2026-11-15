@@ -1,0 +1,18 @@
+{
+  "name": "@runeforge/visual-core",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Editeur visuel de dialogues (RF-020 a RF-023) sans dependance UI : un NPC lu en blocs (mes, next, close, if, brut), des actions qui produisent des modifications de texte ciblees, jamais une reecriture. Ce qui n'est pas represente reste du texte verrouille.",
+  "license": "GPL-3.0-only",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json"
+  },
+  "dependencies": {
+    "@runeforge/runescript-core": "workspace:*",
+    "@runeforge/runescript-parser": "workspace:*"
+  }
+}

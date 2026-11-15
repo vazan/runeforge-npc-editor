@@ -1,0 +1,7 @@
+# Les fixtures de scripts doivent rester byte-identical (BOM, CRLF/LF, tabulations) :
+# aucune normalisation de fins de ligne par git.
+tests/fixtures/** -text
+tests/parser-corpus/** -text
+# Fixtures des mises a jour : un manifeste est signe sur ses octets exacts (une conversion LF -> CRLF a l'extraction casserait la
+# signature), les executables factices et les cles de test ne doivent pas non plus etre touches.
+crates/updater/tests/fixtures/** -text

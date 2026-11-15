@@ -1,0 +1,26 @@
+{
+  "name": "@runeforge/scripts",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Outils de developpement : mesures sur corpus, benchmarks, verifications des registres.",
+  "license": "GPL-3.0-only",
+  "type": "module",
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json"
+  },
+  "dependencies": {
+    "@runeforge/emulator-core": "workspace:*",
+    "@runeforge/emulator-rathena": "workspace:*",
+    "@runeforge/npc-templates": "workspace:*",
+    "@runeforge/project-core": "workspace:*",
+    "@runeforge/runescript-analysis": "workspace:*",
+    "@runeforge/runescript-core": "workspace:*",
+    "@runeforge/runescript-language-server": "workspace:*",
+    "@runeforge/runescript-parser": "workspace:*",
+    "@runeforge/simulation-core": "workspace:*",
+    "@runeforge/visual-core": "workspace:*"
+  },
+  "devDependencies": {
+    "yaml": "2.9.1"
+  }
+}

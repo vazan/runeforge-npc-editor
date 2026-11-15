@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-sftp-dry-run"
+description = "Enables the sftp_dry_run command without any pre-configured scope."
+commands.allow = ["sftp_dry_run"]
+
+[[permission]]
+identifier = "deny-sftp-dry-run"
+description = "Denies the sftp_dry_run command without any pre-configured scope."
+commands.deny = ["sftp_dry_run"]

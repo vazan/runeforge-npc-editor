@@ -1,0 +1,15 @@
+{
+  "schema": 1,
+  "product": "runeforge-studio",
+  "version": "0.2.3",
+  "channel": "stable",
+  "publishedAt": "2026-11-15T10:00:00Z",
+  "notes": "Notes de la 0.2.3.\nDeuxieme ligne.",
+  "platforms": {
+    "windows-x86_64": {
+      "file": "runeforge-studio-0.2.3-windows-x86_64.exe",
+      "size": 1980,
+      "sha256": "29a129265360593ccef01c5ff8ece3035909e64756d6cfa4552037460bbac48d"
+    }
+  }
+}
