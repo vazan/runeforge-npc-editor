@@ -20,7 +20,7 @@
 
 RuneForge Studio opens your rAthena server folder, understands your scripts, and tells you what the server would complain about — **without ever running the server, and without touching your files unless you save.**
 
-> **Pre-release (0.0.0).** No installer or published build yet: you build it from source. Windows 11 is fully verified; on Linux it builds and passes its tests but the window has barely been exercised. rAthena only — Hercules is not supported yet. [What is and isn't verified →](https://github.com/vazan/runeforge-npc-editor/wiki/EN-Compatibility-and-Limitations)
+> **Pre-release (0.1.0-beta.1).** [Download it from the Releases page](https://github.com/vazan/runeforge-npc-editor/releases) (a Windows `.exe` and a Linux binary, no installer) or build it from source. Windows 11 is fully verified; on Linux it builds and passes its tests but the window has barely been exercised. rAthena only — Hercules is not supported yet. [What is and isn't verified →](https://github.com/vazan/runeforge-npc-editor/wiki/EN-Compatibility-and-Limitations)
 
 ## Highlights
 

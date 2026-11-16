@@ -6,12 +6,12 @@ Le projet se construit par **tranches verticales** (code + tests + documentation
 
 | Jalon | Thème | État | Ce qui reste |
 |---|---|---|---|
-| **M0** | Fondations : monorepo, application Tauri, lexer/analyseur mesurés sur de vrais scripts | ✅ Vérifié | Exécuter le CI sur des runners GitHub |
+| **M0** | Fondations : monorepo, application Tauri, lexer/analyseur mesurés sur de vrais scripts | ✅ Vérifié | — (le CI tourne désormais sur GitHub et est vert sur `master`) |
 | **M1** | IDE de bureau : explorateur, onglets, Monaco, enregistrement sûr, récupération, FR/EN, thèmes | ✅ Vérifié (Windows) | Bout en bout sous Linux ; changer l'encodage depuis la barre d'état |
 | **M2** | Moteur de langage : portées, références, index du projet, diagnostics sémantiques | ✅ Vérifié (Windows) | Hercules non vérifié |
 | **M3** | IntelliSense : navigation, complétion, survol, aide de signature, renommage sûr, commandes, modèles | ✅ Vérifié (Windows, rAthena) | Hercules ; complétion des arguments d'autres natures |
 | **M4** | Émulateurs et bases : adaptateur rAthena, objets/monstres/cartes/constantes, rapport de projet, règles de cartes et d'ordre de chargement | 🔶 En cours (M4-S1 à S3d vérifiés) | Adaptateur Hercules ; `RC0001`–`RC0003` (compatibilité entre profils) ; autres natures d'arguments (compétences, quêtes, groupes d'objets) |
-| **M5** | Version V1 : budget de démarrage, audit d'accessibilité, documentation, journal de diagnostic, mises à jour signées (Windows + Linux) | 🔶 En cours | Clé de signature de production et première vraie release ; installateur ; signature de code ; fenêtre et paquets Linux ; essai au lecteur d'écran ; audits de dépendances |
+| **M5** | Version V1 : budget de démarrage, audit d'accessibilité, documentation, journal de diagnostic, mises à jour signées (Windows + Linux) | 🔶 En cours | Une mise à jour installée depuis une vraie release (exige une seconde release) ; installateur ; signature de code ; fenêtre et paquets Linux ; essai au lecteur d'écran ; audits de dépendances |
 | **M6** | Assistants et serveur : assistants, Git en lecture seule, déploiement local | 🔶 En cours | Assistants supplémentaires (buffer, quête) ; transfert SFTP et validation sur un serveur de test |
 | **M7** | Studio visuel : blocs de dialogue, constructeur en nœuds, extensions JSON | 🔶 En cours | Relire un script existant en graphe modifiable ; `select`/`menu` à plusieurs sorties, `goto`, boucles ; annuler/rétablir dans le dialogue |
 | **M8** | Simulation et IA | 🔶 En cours | Déclenchement des événements (`OnTimer`, `OnTouch`, `donpcevent`) ; vérification avec de vrais fournisseurs d'IA ; revue indépendante de la surface réseau |
@@ -19,6 +19,7 @@ Le projet se construit par **tranches verticales** (code + tests + documentation
 
 ## Livré récemment
 
+- La **première pré-version publique, 0.1.0-beta.1** : un `.exe` Windows et un binaire Linux avec un manifeste de mise à jour signé, et la clé de signature de production des mises à jour.
 - Un simulateur de dialogues qui **ne s'arrête jamais sur une erreur**, exécute les fonctions d'autres fichiers du projet et choisit la classe du personnage de test par son nom.
 - Un constructeur de NPC en graphe de nœuds.
 - Des mises à jour signées dans l'application depuis les releases GitHub, pour Windows et Linux.

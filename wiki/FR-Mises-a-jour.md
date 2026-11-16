@@ -4,7 +4,7 @@
 
 RuneForge peut se mettre à jour depuis les **releases d'un dépôt GitHub** — mais seulement quand vous le demandez, et seulement avec une version signée par l'éditeur.
 
-> **État actuel :** le mécanisme est implémenté et testé contre un faux serveur GitHub local, mais **aucune clé de signature n'existe et aucune vraie release n'a encore été publiée**. Tant que le mainteneur n'a pas créé la clé et publié une première release, l'application répond « cette version ne peut pas vérifier les mises à jour » (`not_configured`). Voir [Publier une release](#pour-les-mainteneurs--publier-une-release).
+> **État actuel :** le mécanisme est implémenté et testé contre un faux serveur GitHub local. La clé de signature de production existe et la première release signée, [0.1.0-beta.1](https://github.com/vazan/runeforge-npc-editor/releases), est publiée — mais **aucune mise à jour n'a encore été installée depuis une vraie release**, et la vraie connexion TLS vers `api.github.com` n'a pas été exercée depuis l'application. 0.1.0-beta.1 étant une bêta, choisissez **« Versions stables et bêta »** dans Paramètres › Mises à jour pour que la prochaine bêta vous soit proposée (le choix par défaut « Versions stables seulement » les ignore). Les versions construites avant l'intégration de la clé de production répondent « cette version ne peut pas vérifier les mises à jour » (`not_configured`). Voir [Publier une release](#pour-les-mainteneurs--publier-une-release).
 
 ## Pour les utilisateurs : mettre à jour
 

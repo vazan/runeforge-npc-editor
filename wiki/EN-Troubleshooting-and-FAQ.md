@@ -17,7 +17,7 @@
 | Save was blocked | A character cannot be represented in the file's encoding. RuneForge refuses to replace it silently; change or remove the character |
 | "This folder has no RuneForge configuration yet" | Informational. Choose *Create configuration* only if you want a `.runeforge/project.json` |
 | **The Git panel asks you to enable Git** | Git is refused until you allow it for that project (confirmation box). Accept only for repositories you trust |
-| "This build cannot verify updates" | Expected today: no production signing key or real release exists yet. See [Updates](EN-Updates) |
+| "This build cannot verify updates" | The build predates the production update key (anything built before 0.1.0-beta.1). Install a release from the [Releases page](https://github.com/vazan/runeforge-npc-editor/releases) once; later versions can then update in place. See [Updates](EN-Updates) |
 | End-to-end tests fail once on a busy machine | Some steps that drive the mouse or the completion list are timing-sensitive. Re-run the failing step alone on an idle machine before concluding it is a regression |
 | Linux: window does not open | Install `libwebkit2gtk-4.1-0`, `libgtk-3-0`, `libssl3`; a build from a newer glibc will not start on an older distribution. For a quick try under WSL: `GDK_BACKEND=x11 ./runeforge-studio` |
 
@@ -39,7 +39,7 @@ It is designed so that it cannot do so silently: no write without your action, b
 Windows 11 is fully verified. Linux x86_64 builds and passes all tests but its window has hardly been tested. macOS is not supported.
 
 **Is there an installer or a download?**
-Not yet. Build from source ([Development](EN-Development)). No release has been published.
+There is no installer, but there is a download: the Windows `.exe` and the Linux binary of the 0.1.0-beta.1 pre-release are on the Releases page (see [Getting started](EN-Getting-Started)). You can also build from source ([Development](EN-Development)).
 
 **Why is it called "RuneForge Studio"?**
 It is a working name; a trademark search has not been done.

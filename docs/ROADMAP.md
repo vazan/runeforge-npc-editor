@@ -5,11 +5,11 @@ Chaque tranche se termine par la mise à jour de [`STATUS.md`](STATUS.md). Les d
 
 Légende des dépendances : `→` « nécessite ».
 
-## M0 — Fondations *(VERIFIED, CI non exécutée)*
+## M0 — Fondations *(VERIFIED, CI verte sur GitHub)*
 - [x] Monorepo pnpm, TypeScript strict, Vitest, ESLint, application Tauri 2 + React qui démarre.
 - [x] Lexer sans perte, parseur tolérant, mesure sur corpus réel (`scripts/corpus-report.ts`).
 - [x] Documents de pilotage.
-- [ ] Exécution de la CI sur runners GitHub (`BLOCKED_EXTERNAL`).
+- [x] Exécution de la CI sur runners GitHub : verte sur `master` (7 tâches sur `998ff6c`, 2026-11-15 ; `STATUS.md`, « Publication de 0.1.0-beta.1 »).
 
 ## M1 — IDE desktop *(VERIFIED sur Windows)*
 - [x] **M1-S1** Workspace Cargo + `crates/filesystem` (chemins sûrs, lecture, écriture atomique, conflit externe, récupération, historique) + tests Rust.
@@ -63,7 +63,8 @@ Légende des dépendances : `→` « nécessite ».
 - [x] **M5-S3** Journal de diagnostic local facultatif, rotation et contrôle des événements côté Rust (DEC-037).
 - [x] **M5-S4 (VERIFIED contre un faux GitHub local : 1 713 tests TypeScript, 165 tests Rust, E2E 44/44 + 9/9)** Mises à jour signées depuis les releases d'un dépôt GitHub (DEC-046) : `crates/updater` (manifeste signé minisign, politique réseau, téléchargement vérifié, remplacement de l'exécutable avec retour arrière), commandes `update_check`/`update_install`, Paramètres › Mises à jour (jeton en mémoire seulement), outillage `release:keygen/prepare/publish`, `docs/RELEASE.md`.
 - [x] **M5-S5 (VERIFIED en construction et tests sous Ubuntu 26.04/WSL2, sans fenêtre : 1 728 tests TypeScript, 183 tests Rust sous Linux et 180 sous Windows, mutations 12/12 sous Linux, E2E Windows 44/44 + 9/9)** Mises à jour sous Linux (DEC-047) : une release signée pour Windows et Linux, remplacement atomique d'un ELF en cours d'exécution avec ses droits recopiés, contrôle d'en-tête propre à chaque système, TLS d'OpenSSL sans liste de certificats embarquée (`webpki-root-certs` retiré), `release:prepare --artifact <plateforme>=<fichier>`, inventaire des licences Linux (`THIRD_PARTY_LICENSES_LINUX.md`).
-- [ ] **Mises à jour, ce qui reste (action du propriétaire)** : créer la clé de signature de production (`pnpm release:keygen`), reconstruire avec elle (sous Windows **et** sous Linux), publier une première release et la vérifier contre le vrai GitHub (TLS, dépôt privé) — `BLOCKED_EXTERNAL`.
+- [x] Clé de signature de production créée (`pnpm release:keygen`) et **première release 0.1.0-beta.1 publiée** le 2026-11-15 (pre-release, canal bêta ; binaires bruts Windows **et** Linux).
+- [ ] **Mises à jour, ce qui reste (action du propriétaire)** : publier une seconde release et vérifier, depuis un exemplaire de la première, **une mise à jour réellement installée** contre le vrai GitHub (TLS) — `BLOCKED_EXTERNAL`.
 - [ ] **Linux, ce qui reste** : lancer l'application (rendu de WebKitGTK, Monaco, IME, clavier, démarrage, accessibilité) et dérouler une vraie mise à jour dans la fenêtre — sur une machine de bureau Linux, ou ici avec WebKit WebDriver, `tauri-driver` et un serveur d'affichage virtuel (téléchargements à autoriser) ; autres distributions, ARM, AppImage/`.deb`/`.rpm`.
 - [ ] Installateur, signature de code, licence, paquets Linux, essai au lecteur d'écran, `pnpm audit`/`cargo audit` (`BLOCKED_EXTERNAL`).
 
