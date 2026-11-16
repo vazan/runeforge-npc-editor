@@ -133,6 +133,13 @@ jobs:
       - uses: dtolnay/rust-toolchain@stable
       - uses: Swatinem/rust-cache@v2
       - run: pnpm install --frozen-lockfile
+      - name: Configure WebView2 remote debugging for elevated runner
+        shell: pwsh
+        run: |
+          $policyPath = 'HKLM:\SOFTWARE\Policies\Microsoft\Edge\WebView2\AdditionalBrowserArguments'
+          New-Item -Path $policyPath -Force | Out-Null
+          New-ItemProperty -Path $policyPath -Name 'runeforge-studio.exe' -PropertyType String -Value '--remote-debugging-port=9333' -Force | Out-Null
+          New-ItemProperty -Path $policyPath -Name 'runeforge-e2e-update.exe' -PropertyType String -Value '--remote-debugging-port=9334' -Force | Out-Null
       - name: E2E (construit la variante `e2e`, lance le scenario)
         run: pnpm e2e
       - uses: actions/upload-artifact@v4
