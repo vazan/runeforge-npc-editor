@@ -15,7 +15,8 @@
  *
  * Les controles refusent les erreurs qui rendraient la mise a jour inutilisable ou dangereuse, pour chaque executable :
  *  - c'est un executable de son systeme (en-tete `MZ` pour Windows, `ELF` pour Linux : un fichier de l'autre systeme est refuse) ;
- *  - la version de `tauri.conf.json` est celle de la release (sinon l'application mise a jour se proposerait la meme mise a jour sans fin) ;
+ *  - la version de `tauri.conf.json` est celle de la release (sinon l'application mise a jour se proposerait la meme mise a jour sans fin),
+ *    il est plus recent que ce fichier et, pour Windows, il porte cette version (en clair ou dans sa ressource de version) ;
  *  - il embarque la cle publique de production et aucune cle de test (construit sans la fonctionnalite `e2e`, apres la configuration de
  *    la cle) ;
  * et pour le manifeste : la signature se verifie avec cette cle publique, par une implementation independante de celle de l'application.
@@ -111,6 +112,11 @@ interface ReadArtifact {
   readonly path: string;
 }
 
+/** Le texte de la version, en UTF-8 ou en UTF-16 (ressource de version d'un executable Windows). */
+function carriesVersion(bytes: Buffer, version: string): boolean {
+  return bytes.includes(Buffer.from(version)) || bytes.includes(Buffer.from(version, "utf16le"));
+}
+
 /** Lit un executable et refuse tout ce qui le rendrait inutilisable ou dangereux ; le message dit de quelle plateforme il s'agit. */
 function readArtifact(input: ArtifactInput, context: { version: string; publicKey: string; forbiddenKeys: readonly string[]; configPath: string }): ReadArtifact {
   const kind = executableKindFor(input.platform);
@@ -137,7 +143,10 @@ function readArtifact(input: ArtifactInput, context: { version: string; publicKe
       refuse(`${label} l'executable embarque une cle de test (construction \`e2e\` ?) : reconstruisez-le en production`);
     }
   }
-  if (!bytes.includes(Buffer.from(context.version))) {
+  // La version n'est pas ecrite en clair dans un vrai binaire de Tauri (constate sur 0.1.0-beta.1) : un executable Windows la porte dans sa
+  // ressource de version (UTF-16), un ELF n'en porte aucune. Windows : exigee, en UTF-8 ou en UTF-16. Linux : seule la date ci-dessus
+  // protege d'une construction faite avant le changement de version.
+  if (kind === "pe" && !carriesVersion(bytes, context.version)) {
     refuse(`${label} l'executable ne contient pas la version ${context.version} : reconstruisez-le apres le changement de version`);
   }
   return { platform: input.platform, name: artifactName(context.version, input.platform), bytes, path: input.path };
