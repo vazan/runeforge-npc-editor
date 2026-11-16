@@ -1864,7 +1864,7 @@ export class AppController {
   async createFile(relativePath: string): Promise<boolean> {
     const project = this.store.getState().project;
     if (project === null) return false;
-    const cleaned = relativePath.trim().replace(/\\/g, "/").replace(/^\/+/, "");
+    const cleaned = relativePath.trim().replace(/\\/g, "/");
     const dialog = this.store.getState().dialog;
     const directory = dialog?.kind === "new-file" ? dialog.directory : "";
     if (cleaned === "") return false;
@@ -1881,6 +1881,8 @@ export class AppController {
 
   /** Cree un fichier vide (et ses dossiers) sans jamais ecraser un fichier existant. */
   private async createEmptyFile(rootId: string, cleaned: string): Promise<"created" | "exists" | "invalid"> {
+    // Refuser les chemins enracines (POSIX, Windows, UNC) et prefixes par lecteur, meme relatifs comme C:x.
+    if (cleaned.startsWith("/") || /^[A-Za-z]:/.test(cleaned)) return "invalid";
     try {
       const segments = cleaned.split("/");
       for (let index = 1; index < segments.length; index += 1) {
@@ -2169,7 +2171,7 @@ export class AppController {
    */
   async createWizardFile(relativePath: string, source: string): Promise<"created" | "exists" | "invalid"> {
     const project = this.store.getState().project;
-    const cleaned = relativePath.trim().replace(/\\/g, "/").replace(/^\/+/, "");
+    const cleaned = relativePath.trim().replace(/\\/g, "/");
     if (project === null || cleaned === "" || cleaned.endsWith("/")) return "invalid";
     const outcome = await this.createEmptyFile(project.root.id, cleaned);
     if (outcome !== "created") return outcome;

@@ -19,7 +19,10 @@ const SERVER_MARKERS: readonly string[] = [
 
 /** Chemin d'un fichier du serveur, depuis la racine du projet (`root` vide : le projet est la racine du serveur). */
 export function joinServerPath(root: string, relative: string): string {
-  return root === "" ? relative : `${root}/${relative}`;
+  // Les configurations du serveur acceptent `./` ; le scan et le backend utilisent des chemins sans segment `.`.
+  // Ne pas effacer les segments vides ou `..` : le garde de chemins doit encore refuser les chemins dangereux.
+  const normalized = relative.split("/").filter((segment) => segment !== ".").join("/");
+  return root === "" ? normalized : `${root}/${normalized}`;
 }
 
 /**

@@ -395,6 +395,18 @@ describe("AppController - fichiers et configuration", () => {
     expect(h.backend.files.has("../evil.txt")).toBe(false);
   });
 
+  it.each(["/npc/absolute.txt", "\\npc\\absolute.txt", "\\\\server\\share\\absolute.txt", "C:\\npc\\absolute.txt", "c:/npc/absolute.txt", "C:npc/relative.txt"])("refuse un chemin absolu ou prefixe par lecteur sans le transformer en chemin de projet : %s", async (path) => {
+    const h = harness();
+    await openedProject(h);
+    h.controller.requestNewFile("");
+    const mkdir = vi.spyOn(h.backend, "createDirectory");
+    const write = vi.spyOn(h.backend, "writeFile");
+    expect(await h.controller.createFile(path)).toBe(false);
+    expect(h.store.getState().dialog).toMatchObject({ kind: "new-file", error: "invalid" });
+    expect(mkdir).not.toHaveBeenCalled();
+    expect(write).not.toHaveBeenCalled();
+  });
+
   it("cree puis met a jour .runeforge/project.json en conservant les cles inconnues", async () => {
     const h = harness();
     await openedProject(h);

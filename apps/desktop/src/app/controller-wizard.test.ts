@@ -277,7 +277,7 @@ describe("AppController - assistants de NPC : creation d'un fichier", () => {
 
   it("cree les dossiers manquants et accepte les antislashs", async () => {
     const h = await wizardOpen();
-    expect(await h.controller.createWizardFile("  \\npc\\perso\\x.txt ", SHOP)).toBe("created");
+    expect(await h.controller.createWizardFile("  npc\\perso\\x.txt ", SHOP)).toBe("created");
     expect(h.backend.directories.has("npc")).toBe(true);
     expect(h.backend.directories.has("npc/perso")).toBe(true);
     expect(h.backend.textOf("npc/perso/x.txt")).toBe("");
@@ -299,6 +299,16 @@ describe("AppController - assistants de NPC : creation d'un fichier", () => {
     expect(h.store.getState().dialog).toEqual({ kind: "npc-wizard", wizard: "shop" });
     expect(h.store.getState().tabs).toEqual([]);
     expect(h.backend.files.has("hors.txt")).toBe(false);
+  });
+
+  it.each(["/npc/absolute.txt", "\\npc\\absolute.txt", "\\\\server\\share\\absolute.txt", "C:\\npc\\absolute.txt", "c:/npc/absolute.txt", "C:npc/relative.txt"])("refuse un chemin absolu ou prefixe par lecteur sans creer de fichier ou de dossier : %s", async (path) => {
+    const h = await wizardOpen();
+    const mkdir = vi.spyOn(h.backend, "createDirectory");
+    const write = vi.spyOn(h.backend, "writeFile");
+    expect(await h.controller.createWizardFile(path, SHOP)).toBe("invalid");
+    expect(h.store.getState().dialog).toEqual({ kind: "npc-wizard", wizard: "shop" });
+    expect(mkdir).not.toHaveBeenCalled();
+    expect(write).not.toHaveBeenCalled();
   });
 
   it("ne fait rien sans projet ouvert", async () => {

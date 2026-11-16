@@ -86,6 +86,28 @@ describe("resolveLoadedScripts", () => {
     };
     expect((await resolveLoadedScripts(local)).files).toEqual(["npc/re/a.txt", "npc/shared.txt"]);
   });
+
+  it.each(["", "srv"])("resout les segments point des imports et scripts depuis la racine du serveur (%s)", async (root) => {
+    const texts: Record<string, string> = {
+      "conf/map_athena.conf": "import: ./conf/import/./maps.conf",
+      "conf/import/maps.conf": "map: prontera",
+      "npc/re/scripts_main.conf": "import: ./npc/custom/./scripts.conf",
+      "npc/custom/scripts.conf": "npc: ./npc/custom/./a.txt",
+    };
+    const prefix = root === "" ? "" : `${root}/`;
+    const readText = (path: string) => Promise.resolve(
+      path.startsWith(prefix) ? texts[path.slice(prefix.length)] ?? null : null,
+    );
+    const loaded = await resolveLoadedScripts({
+      root,
+      renewal: true,
+      readText,
+      hasFile: (path) => path === `${prefix}npc/custom/a.txt`,
+    });
+    expect(loaded.files).toEqual([`${prefix}npc/custom/a.txt`]);
+    expect(loaded.report.issues).toEqual([]);
+    expect(loaded.report.maps).toEqual(["prontera"]);
+  });
 });
 
 describe("resolveLoadedMaps", () => {
