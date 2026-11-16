@@ -1,82 +1,150 @@
+<div align="center">
+
 # RuneForge Studio
 
-IDE desktop (Tauri 2 + React + TypeScript + Rust) pour développer des scripts **rAthena** et **Hercules**
-(Ragnarok Online) sur Windows et Linux. *Nom de travail, à valider commercialement. Produit non officiel, sans lien avec Gravity.*
+**A desktop IDE for writing and checking [rAthena](https://github.com/rathena/rathena) NPC scripts.**
 
-> **État réel (voir [`docs/STATUS.md`](docs/STATUS.md)).** Un éditeur de scripts fiable fonctionne sur **Windows** (l'application et son E2E ont été lancés) ; sous **Linux**, l'exécutable se construit et tous les tests passent (Ubuntu 26.04 sous WSL2) et l'exécutable a été **lancé 20 secondes sous WSLg (il démarre ; aucune interface n'y a été testée, pas d'E2E Linux)** :
-> projets, explorateur, onglets, Monaco avec coloration, diagnostics de **syntaxe** et **sémantiques** (label inconnu
-> ou en double, fonction locale non définie, et — sur demande — doublons et références non résolues entre fichiers),
-> **navigation** (F12 / Ctrl+clic, plan, références avec Maj+F12, symboles du projet avec Ctrl+T), **complétion et survol**
-> des symboles du projet (labels, fonctions, noms de NPC, variables), **renommage sûr** (F2) des labels et variables locales,
-> le tout sur un index du projet construit en arrière-plan ; enregistrement sûr (octets préservés, encodages hérités, fins de
-> ligne, détection des modifications externes), récupération après plantage, FR/EN, thèmes clair/sombre.
-> La **bibliothèque rAthena intégrée** fournit hors ligne la complétion, l'aide au survol et les signatures des commandes. Pour un serveur
-> **rAthena** reconnu dans le projet, l'application lit à l'exécution sa table de commandes et ses règles de chargement pour les vérifications
-> propres au serveur : **commande inconnue** et **nombre d'arguments** sont signalés, l'index peut se limiter aux scripts que
-> le serveur charge réellement, et les **commandes** sont proposées (complétion), documentées (survol, aide de signature avec le paramètre
-> actif) et déclarables pour un fork (commandes du projet, action rapide Ctrl+.). Quatre **modèles de NPC** (`npc-script`, `npc-warp`,
-> `npc-shop`, `npc-healer`) s'insèrent en tapant `npc-`. Les **bases du serveur** (objets, monstres, cartes, constantes) sont lues de la même
-> façon : l'application propose et décrit ce que le serveur connaît, signale en information un objet, un monstre ou une carte **introuvable**, et
-> permet de les rechercher et de les insérer (Ctrl+Maj+D).
-> Le **rapport de projet** (Ctrl+Maj+M) liste, fichier par fichier et les plus graves d'abord, les problèmes de tous les fichiers indexés — pas
-> seulement des fichiers ouverts — avec filtres, ouverture au clic à la position du problème, copie en texte, et, pour un serveur reconnu,
-> seulement les scripts que le serveur charge par défaut (la documentation et les bases du serveur n'ont rien à y faire).
-> Le serveur ne charge pas toujours ce qu'un script déclare : une déclaration sur une carte **que le serveur ne charge pas** (`conf/maps_athena.conf`) est ignorée par lui **sans aucun message** — l'application la signale, comme
-> une carte inconnue de l'index et un **label qui porte le nom d'une commande, d'une constante ou d'un paramètre** (le serveur le refuse). Il lit aussi l'**ordre dans lequel le serveur charge ses scripts** : une
-> fonction appelée **par son nom** avant d'être chargée (fichier chargé après, ou fonction définie plus bas) empêche le script de se charger — l'application le signale (`callfunc "Nom"`, résolu à l'exécution, n'est pas concerné).
-> Le menu Fichier donne accès à quatre **assistants rAthena**, à l'**éditeur visuel de dialogues** et au **déploiement vers un dossier local** avec aperçu, sauvegarde et restauration des fichiers remplacés.
-> Le panneau **Git** affiche les changements et les compare à `HEAD` après activation explicite pour le projet. Le journal de diagnostic local s'active dans Paramètres › Confidentialité.
-> **Aide › Mises à jour…** installe une version plus récente depuis les **releases d'un dépôt GitHub** (privé ou non), **sous Windows et sous Linux** : manifeste signé par l'éditeur, vérifié avec une clé publique embarquée, un exécutable par système, jamais sans l'utilisateur ; la clé de production et la première release restent à créer ([`docs/RELEASE.md`](docs/RELEASE.md)).
-> Hercules, SSH/SFTP, le graphe visuel général, la simulation et l'IA restent à réaliser. Les vérifications de l'interface couvrent Windows ; Linux est couvert par la construction et les tests (voir [`docs/KNOWN_LIMITATIONS.md`](docs/KNOWN_LIMITATIONS.md), « Plateformes »).
-> Le cahier des charges est dans [`CLAUDE.md`](CLAUDE.md).
+It opens your server folder, understands your scripts, and tells you what the server would complain about —<br>without ever running the server, and without touching your files unless you save.
 
-## Structure
+[![License: GPL-3.0-only](https://img.shields.io/badge/license-GPL--3.0--only-blue.svg)](LICENSE)
+[![CI](https://github.com/vazan/runeforge-npc-editor/actions/workflows/ci.yml/badge.svg)](https://github.com/vazan/runeforge-npc-editor/actions/workflows/ci.yml)
+![Platforms](https://img.shields.io/badge/platforms-Windows%2011%20%7C%20Linux-lightgrey)
+![Built with Tauri 2](https://img.shields.io/badge/built%20with-Tauri%202%20%C2%B7%20React%20%C2%B7%20Rust-orange)
+![Status: pre-release](https://img.shields.io/badge/status-pre--release-yellow)
 
-```text
-apps/desktop/              Application Tauri 2 + React (src/) et coeur Rust (src-tauri/)
-crates/filesystem/         Services de fichiers sûrs (racines approuvées, écriture atomique, récupération, historique)
-crates/git/                Statut Git et lecture de fichiers dans HEAD
-crates/updater/            Mises à jour signées : releases GitHub, manifeste minisign, téléchargement vérifié, remplacement de l'exécutable
-packages/runescript-core/  Lexer sans perte, types, catalogue de diagnostics FR/EN (sans dépendance UI/OS)
-packages/runescript-parser/ Parseur tolérant et AST avec plages de source
-packages/runescript-analysis/ Symboles, portées de labels, références, index de projet, diagnostics sémantiques
-packages/runescript-language-server/ Service de langage (forme LSP) : diagnostics, plan, définition, références, recherche de symboles
-packages/emulator-core/    Registre de commandes sourcées, catalogue de références (objets, monstres, cartes, constantes), notation des arguments, règles de chargement `scripts_*.conf` (sans dépendance UI/OS)
-packages/emulator-rathena/ Adaptateur rAthena : table des commandes, manuel, mode renewal, scripts chargés, bases `db/*.yml` et `map_index.txt` (lus dans les fichiers de l'utilisateur)
-packages/npc-templates/    Modèles de NPC et assistants rAthena avec validation statique
-packages/deploy-core/      Planification, exécution et restauration du déploiement
-packages/visual-core/      Import en blocs et modifications ciblées de dialogues NPC
-packages/project-core/     Codec d'encodage/EOL sans perte, configuration, préférences, session, diff, arbre
-scripts/                   Mesures sur corpus (parseur, analyse, aller-retour), E2E Windows, outillage de release (scripts/release)
-docs/                      STATUS, ROADMAP, DECISIONS, TEST_MATRIX, KNOWN_LIMITATIONS, RELEASE_CHECKLIST, RELEASE, DEV_SETUP,
-                           LANGUAGE_SPEC, PERFORMANCE, COMPATIBILITY, SECURITY, LEGAL, ACCESSIBILITY,
-                           GUIDE_UTILISATEUR (FR), USER_GUIDE (EN)
-```
+[**Wiki**](https://github.com/vazan/runeforge-npc-editor/wiki) ·
+[Getting started](https://github.com/vazan/runeforge-npc-editor/wiki/EN-Getting-Started) ·
+[Changelog](CHANGELOG.md) ·
+[Roadmap](https://github.com/vazan/runeforge-npc-editor/wiki/EN-Roadmap) ·
+🇫🇷 [**Lisez-moi en français**](README.fr.md)
 
-## Démarrage rapide
+</div>
 
-Prérequis et détails : [`docs/DEV_SETUP.md`](docs/DEV_SETUP.md) (Node ≥ 22, pnpm 10, Rust stable, outils C++ + WebView2 sous Windows ; sous Linux, les paquets WebKitGTK/GTK/OpenSSL listés dans la section « Linux »).
+<p align="center">
+  <img src="docs/images/editor-diagnostics.png" alt="RuneForge Studio showing an NPC script with underlined problems and the Problems panel" width="900">
+</p>
+
+> **Unofficial tool, not affiliated with Gravity.** "Ragnarok Online" and "Gravity" are trademarks of their owners. *RuneForge Studio* is a working name.
+
+> **Pre-release (version 0.0.0).** No installer and no published build yet — you build it from source. **Windows 11** is fully verified; on **Linux** it builds and all tests pass, but the window has barely been exercised. **Hercules is not supported yet.** See [what is and isn't verified](https://github.com/vazan/runeforge-npc-editor/wiki/EN-Compatibility-and-Limitations).
+
+## Why RuneForge?
+
+Ragnarok Online server scripts are plain text, often legacy-encoded, and the server tells you little when it silently ignores one. RuneForge gives script authors what a modern IDE gives other languages — and takes your files' integrity seriously.
+
+### Your files are safe
+
+- Opening then saving **without changes writes nothing**; with changes, only the changed bytes differ. Verified by a **byte-for-byte round trip over 2,303 real scripts** (58 in legacy encodings, 4 with mixed line endings).
+- Encodings, BOMs and CRLF/LF/mixed line endings are preserved. A character the encoding cannot hold **blocks the save** instead of being replaced.
+- A file changed elsewhere is **never overwritten silently**. Unsaved work survives a crash.
+- No telemetry. The network is used only when you explicitly ask (updates, optional AI, SFTP preview).
+
+### It understands rAthena scripts
+
+- **Tolerant, lossless parser**: syntax and semantic diagnostics, go to definition, find references, safe rename, outline, project-wide symbol search.
+- **Completion, hover and signature help** for commands (667 bundled offline), labels, functions, NPCs, variables — and, from *your* server's files, **items, monsters, maps and constants**.
+- **Server-aware checks** read at runtime from your rAthena folder: unknown command, wrong argument count, unknown item/monster/map, an NPC on a map the server **doesn't load** (ignored with no message), a label named like a command, a function called before the server has loaded it.
+- A **project report** lists problems across every file the server really loads.
+
+<table>
+  <tr>
+    <td width="50%"><img src="docs/images/project-report.png" alt="Project report with filters"><br><sub>Project report: problems across all loaded scripts.</sub></td>
+    <td width="50%"><img src="docs/images/node-builder.png" alt="Node-based NPC builder"><br><sub>Node builder: wire commands into a new NPC.</sub></td>
+  </tr>
+  <tr>
+    <td width="50%"><img src="docs/images/dialogue-simulation.png" alt="Dialogue simulation transcript"><br><sub>Dialogue simulation: play an NPC locally.</sub></td>
+    <td width="50%"><img src="docs/images/editor-dark-theme.png" alt="Dark theme"><br><sub>Light, dark or system theme; English or French UI.</sub></td>
+  </tr>
+</table>
+
+<sub>Screenshots come from the automated end-to-end scenario on a small synthetic project.</sub>
+
+### Tools to build NPCs faster
+
+- **Templates** (`npc-script`, `npc-warp`, `npc-shop`, `npc-healer`) and **wizards** with live, validated output.
+- A **visual dialogue editor** (blocks) and a **node-graph NPC builder**.
+- A **local dialogue simulator** that never stops on an error: it notes what the server would refuse and keeps going.
+- Optional **AI drafting** through an OpenAI-compatible endpoint you configure — with explicit consent before every send, and API keys kept in memory only.
+- A read-only **Git panel**, **local deployment** with backup and restore, and a read-only **SFTP comparison**.
+- **Signed in-app updates** from GitHub releases (Windows and Linux) — implemented, awaiting a first signed release.
+
+## Getting started
+
+**Requirements:** Node.js ≥ 22, pnpm 10, Rust stable. On Windows: Visual Studio Build Tools (C++) and WebView2 (included in Windows 11). On Linux: WebKitGTK 4.1, GTK 3 and OpenSSL development packages — see [`docs/DEV_SETUP.md`](docs/DEV_SETUP.md).
 
 ```bash
+git clone https://github.com/vazan/runeforge-npc-editor.git
+cd runeforge-npc-editor
 pnpm install
-pnpm check:all                                    # typecheck + lint + tests TypeScript + clippy + tests Rust
-pnpm --filter @runeforge/desktop tauri dev        # lance l'application en développement
-pnpm --filter @runeforge/desktop tauri build --no-bundle   # exécutable dans target/release/ (runeforge-studio.exe, ou runeforge-studio sous Linux)
-pnpm build:linux                                  # depuis Windows : construit dans WSL l'ELF Linux et un AppImage -> target/release/runeforge-studio-linux-x86_64[.AppImage]
-pnpm e2e                                          # scénario E2E Windows sur l'exécutable réel (Windows seulement)
+pnpm --filter @runeforge/desktop tauri dev            # run in development
 ```
 
-Aucun installateur Windows (MSI, NSIS) ni paquet `.deb`/`.rpm` n'est fourni ni testé : sous Windows l'application est l'exécutable seul ; sous Linux, `pnpm build:linux` produit l'ELF brut et un **AppImage** (lancé 20 s sous WSLg ; il exige une glibc aussi récente que celle de la machine de construction, voir [`docs/RELEASE.md`](docs/RELEASE.md)) ; `chmod +x` au premier lancement. Publier une version que les utilisateurs installent depuis l'application : [`docs/RELEASE.md`](docs/RELEASE.md) (`pnpm release:keygen`, `release:prepare`, `release:publish`).
+To build the executable (no installer is produced):
 
-## Garanties de fiabilité (vérifiées)
+```bash
+pnpm --filter @runeforge/desktop tauri build --no-bundle   # -> target/release/runeforge-studio[.exe]
+```
 
-- Ouvrir puis enregistrer **sans modification n'écrit rien** ; avec modification, seuls les octets modifiés changent
-  (aller-retour identique sur 2 303 scripts réels, dont 58 en encodage hérité et 4 à fins de ligne mixtes).
-- Un fichier modifié ailleurs n'est **jamais écrasé** sans décision explicite (comparaison, rechargement ou écrasement).
-- Un caractère impossible à représenter dans l'encodage du fichier **bloque** l'enregistrement au lieu d'être remplacé.
-- Les modifications non enregistrées survivent à un plantage (instantanés de récupération).
-- Les écritures dans un projet ou une destination choisie passent par des racines approuvées et des chemins relatifs vérifiés côté Rust. L'application n'envoie pas de télémétrie.
+Then **Open project folder…** and pick the root of your rAthena server (or its `npc/` folder). Nothing is modified when a project opens. Full walkthrough: [Getting started](https://github.com/vazan/runeforge-npc-editor/wiki/EN-Getting-Started).
 
-## Sécurité par défaut
+> ⚠️ Use **pnpm**, never `npm install`, in this repository.
 
-Les 27 commandes IPC sont explicitement autorisées. Rust valide les chemins et la CSP bloque les scripts inline et `eval`. Voir [`docs/SECURITY.md`](docs/SECURITY.md).
+## Platform support
+
+| | State |
+|---|---|
+| **Windows 11** | Full application verified, including an automated end-to-end run on the real executable |
+| **Linux x86_64** | Builds; all tests pass on Ubuntu 26.04 (WSL2); window launched for 20 s only. `pnpm build:linux` also builds an AppImage |
+| **macOS** | Not supported |
+| **rAthena** | Renewal verified; pre-renewal logic tested on fixtures |
+| **Hercules** | Not supported yet |
+
+## Documentation
+
+| | |
+|---|---|
+| 📖 **Wiki** (English + Français) | [Home](https://github.com/vazan/runeforge-npc-editor/wiki) — user guide, diagnostics reference, server integration, architecture, development |
+| 🧪 **Project status and evidence** | [`docs/STATUS.md`](docs/STATUS.md) · [`docs/TEST_MATRIX.md`](docs/TEST_MATRIX.md) *(French)* |
+| ⚠️ **Known limitations** | [`docs/KNOWN_LIMITATIONS.md`](docs/KNOWN_LIMITATIONS.md) *(French)* |
+| 🔐 **Security model** | [`docs/SECURITY.md`](docs/SECURITY.md) *(French)* |
+| 🧭 **Design decisions** | [`docs/DECISIONS.md`](docs/DECISIONS.md) *(French)* |
+| 📦 **Releasing and updates** | [`docs/RELEASE.md`](docs/RELEASE.md) *(French)* |
+| 📚 **User guides** | [English](docs/USER_GUIDE.md) · [Français](docs/GUIDE_UTILISATEUR.md) |
+
+The `docs/` folder is the detailed, evidence-backed source of truth (a status is "verified" only with an executed command and its result). The wiki is the readable summary.
+
+## Project layout
+
+```text
+apps/desktop/        Tauri 2 + React application (src/) and Rust core (src-tauri/)
+crates/              Rust: filesystem (safe I/O), git (read-only), remote-transport (SFTP preview), updater (signed updates)
+packages/            TypeScript libraries: lexer, parser, analysis, language server, emulator adapters,
+                     NPC templates, visual builder, simulator, deployment, project core
+scripts/             Corpus measurements, Windows end-to-end scenario, release tooling
+docs/                Project documents (status, decisions, security, limits…) and screenshots
+wiki/                Sources of the bilingual GitHub wiki
+```
+
+More in the [Architecture](https://github.com/vazan/runeforge-npc-editor/wiki/EN-Architecture) page.
+
+## Contributing
+
+Contributions are welcome — bug reports from real servers are especially valuable.
+
+1. Open an issue first for anything sizeable ([templates](https://github.com/vazan/runeforge-npc-editor/issues/new/choose): bug report, diagnostic report, feature request; English or French).
+2. Run `pnpm check:all` (type-check, lint, TypeScript tests, clippy, Rust tests) before opening a pull request. On Windows, `pnpm e2e` drives the real executable.
+3. Describe the *what and why* and the evidence you ran.
+
+See [Development](https://github.com/vazan/runeforge-npc-editor/wiki/EN-Development) for conventions. **Never paste secrets** (API keys, tokens, `*.key`) in an issue.
+
+### Security
+
+Please **do not open a public issue** for a vulnerability — use [private vulnerability reporting](https://github.com/vazan/runeforge-npc-editor/security/advisories/new). Overview: [Privacy and security](https://github.com/vazan/runeforge-npc-editor/wiki/EN-Privacy-and-Security). No external security review has been done yet.
+
+## License
+
+RuneForge Studio is released under the **[GNU GPL v3 (GPL-3.0-only)](LICENSE)**. It bundles command signatures and help text derived from rAthena (GPL-3.0); no rAthena server code or database is embedded — your server's files are read at runtime. Third-party licenses: [`docs/THIRD_PARTY_LICENSES.md`](docs/THIRD_PARTY_LICENSES.md). This is an inventory, not legal advice; see [License](https://github.com/vazan/runeforge-npc-editor/wiki/EN-License).
+
+## Acknowledgements
+
+Built on [Tauri](https://tauri.app), [React](https://react.dev), the [Monaco editor](https://github.com/microsoft/monaco-editor) and [Vite](https://vite.dev). Script semantics and command documentation come from the [rAthena](https://github.com/rathena/rathena) project and its Dev Team.

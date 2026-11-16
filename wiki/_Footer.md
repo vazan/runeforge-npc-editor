@@ -1,0 +1,1 @@
+RuneForge Studio is an unofficial tool, not affiliated with Gravity · Outil non officiel, sans lien avec Gravity · GPL-3.0-only · [Repository](https://github.com/vazan/runeforge-npc-editor) · [Issues](https://github.com/vazan/runeforge-npc-editor/issues/new/choose)

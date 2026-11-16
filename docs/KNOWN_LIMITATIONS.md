@@ -15,7 +15,7 @@
   fichiers indexés : voir « Rapport de projet » plus bas pour ses limites.
 - **Aucun adaptateur Hercules** : pour un projet Hercules l'application l'affiche (« pas de registre »), n'émet aucune alerte de commande
   ou de référence et ne propose ni commande, ni modèle, ni objet, monstre, carte ou constante.
-- SSH/SFTP, graphe visuel général, simulateur, IA, plugins et exécution sur un serveur de test. Les sections M6 et M7 ci-dessous délimitent les fonctions disponibles.
+- Le **transfert** SSH/SFTP (seul un aperçu en lecture seule existe : « Aperçu SFTP en lecture seule » plus bas), graphe visuel général, simulateur, IA, plugins et exécution sur un serveur de test. Les sections M6 et M7 ci-dessous délimitent les fonctions disponibles.
 - Explorateur : pas de renommage, déplacement ni suppression de fichiers (choix volontaire : aucune opération destructive
   tant que leur garde-fou n'est pas conçu) ; création de fichiers vides uniquement.
 - Éditeur : un seul groupe d'éditeurs ; pas de réorganisation des onglets par glisser-déposer ; l'encodage ne se change que
@@ -241,14 +241,14 @@
 
 ## Sécurité (état)
 - Les 27 commandes de `src-tauri/src/command_names.rs` sont accordées explicitement dans la capability (test de cohérence).
-  Le panneau Git lance le client Git local après activation explicite pour le projet. Voir [`SECURITY.md`](SECURITY.md).
+  Le panneau Git lance le client Git local après activation explicite pour le projet ; l'aperçu SFTP lance le client OpenSSH du système après accord dans une boîte de dialogue native. Voir [`SECURITY.md`](SECURITY.md).
 - CSP de production : `script-src 'self'` (pas d'inline, pas d'eval) mais `style-src 'unsafe-inline'` car Monaco injecte des
   styles à l'exécution (DEC-016).
 - L'inventaire des licences existe dans [`LEGAL.md`](LEGAL.md) pour la version auditée. Les audits de vulnérabilités exigent un accès réseau.
 
 ## Droits et conformité
 - Le nom « RuneForge Studio » est un nom de travail (recherche d'antériorité à faire).
-- Le produit et ses paquets sont déclarés sous GPL-3.0-only et `Software/LICENSE` contient le texte GPLv3 requis pour la bibliothèque. La revue juridique de distribution, des autres dépendances, de la marque et des notices reste à faire : `BLOCKED_EXTERNAL`.
+- Le produit et ses paquets sont déclarés sous GPL-3.0-only et `LICENSE` contient le texte GPLv3 requis pour la bibliothèque. La revue juridique de distribution, des autres dépendances, de la marque et des notices reste à faire : `BLOCKED_EXTERNAL`.
 - La bibliothèque générée inclut le texte d'aide rAthena sous GPL-3.0-only, avec ses références de provenance. Aucun code serveur ni base de données du serveur n'est embarqué ; ils restent lus à l'exécution depuis le projet de l'utilisateur selon les besoins.
 
 ## Dépendances externes (non réalisables ici)
@@ -281,7 +281,20 @@
 
 - Le panneau Git exige un client Git installé et une activation explicite pour le projet. Il compare les fichiers à `HEAD` et affiche les changements de l'index et du dossier de travail. Les opérations d'écriture Git et les commandes réseau sont hors périmètre.
 - Le déploiement copie les versions enregistrées de scripts vers un dossier local choisi, à raison de 2 000 fichiers au maximum par plan. Une sauvegarde précède chaque remplacement. La restauration vise les fichiers remplacés du dernier déploiement et conserve les fichiers nouvellement créés. Si un fichier a changé depuis le déploiement, sa restauration est refusée.
-- Pour charger les scripts copiés, l'opérateur doit gérer séparément les listes `scripts_*.conf` et le rechargement sur son serveur. Le transport SSH/SFTP reste à implémenter.
+- Pour charger les scripts copiés, l'opérateur doit gérer séparément les listes `scripts_*.conf` et le rechargement sur son serveur. Le **transfert** par SSH/SFTP reste à implémenter : seul l'aperçu en lecture seule décrit ci-dessous existe.
+
+## Aperçu SFTP en lecture seule (M6)
+
+**Fichier › Aperçu SFTP…** compare des scripts **enregistrés** avec un dossier distant. Code : `crates/remote-transport`, `apps/desktop/src-tauri/src/sftp.rs` (commande `sftp_dry_run`), `SftpDialog.tsx`. Mesures de sécurité : [`SECURITY.md`](SECURITY.md) (« Aperçu SFTP »).
+
+- **Lecture seule** : aucun transfert, aucune sauvegarde, aucun rechargement, aucune commande distante. Le client n'émet que des requêtes de lecture (ouverture en lecture seule, lecture, fermeture, `LSTAT`, `FSTAT`, `REALPATH`). Le résultat par fichier est *Identique*, *Différent* ou *Absent à distance* (taille et SHA-256 comparés) ; le texte non enregistré n'est pas comparé.
+- **Client OpenSSH du système requis** : `%SystemRoot%\System32\OpenSSH\ssh.exe` sous Windows, `/usr/bin/ssh` ou `/bin/ssh` ailleurs ; sans lui, l'aperçu échoue (`unavailable`). Sa présence n'est pas contrôlée avant l'appui sur « Comparer ».
+- **Authentification par clé publique via l'agent SSH seulement** (`SSH_AUTH_SOCK`) : ni mot de passe, ni fichier d'identité, ni `ProxyCommand`/`ProxyJump`, ni redirection. L'agent de l'utilisateur doit donc être démarré et porter une clé acceptée par le serveur.
+- **Clé d'hôte `ssh-ed25519` épinglée, saisie à la main** : l'application ne la découvre ni ne la vérifie ; la protection contre un hôte usurpé vaut ce que vaut le canal par lequel l'utilisateur l'a obtenue. Une clé d'un autre type (RSA, ECDSA) est refusée.
+- **Accord par boîte de dialogue native** pour la destination exacte (utilisateur, hôte, port, dossier, empreinte SHA-256 de la clé) avant toute connexion ; un refus donne `cancelled`.
+- **Bornes** : 1 à 100 chemins `.txt` relatifs au projet (jamais `.runeforge`), 4 Mio par fichier et 16 Mio au total — les fichiers locaux sont lus et hachés **avant** tout accès réseau —, dossier distant absolu en ASCII, 30 secondes au plus (le processus est alors tué), une seule comparaison à la fois (`busy`). Un composant du chemin distant qui n'est pas un dossier (lien symbolique compris), un chemin que `REALPATH` ne rend pas à l'identique et un fichier qui change pendant sa lecture sont refusés.
+- **Rien n'est mémorisé** : hôte, utilisateur, clé d'hôte, dossier et chemins vivent dans le dialogue et disparaissent à sa fermeture (ni réglages, ni journal).
+- **Jamais essayé contre un vrai serveur** : les 6 tests Rust et les 5 tests TypeScript font tourner le client sur des flux en mémoire et vérifient la ligne de commande construite ; il n'y a pas d'étape E2E, ni d'essai sous Linux. Le comportement avec une version donnée d'OpenSSH ou d'un serveur SFTP n'est pas connu. Considérez la fonction comme **précoce**.
 
 ## Éditeur visuel de dialogues (M7)
 

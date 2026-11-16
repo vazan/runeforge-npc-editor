@@ -44,7 +44,7 @@ Rien n'est publié, signé ni commité sans autorisation explicite du propriéta
 
 ## Légal et commercial — [`LEGAL.md`](LEGAL.md)
 - [x] Inventaire hors ligne des licences Windows : les 263 composants livrés correspondent au tableau [`THIRD_PARTY_LICENSES.md`](THIRD_PARTY_LICENSES.md), aucun « à examiner » (`webpki-root-certs` n'est plus lié). Linux : 309 composants livrés dans [`THIRD_PARTY_LICENSES_LINUX.md`](THIRD_PARTY_LICENSES_LINUX.md) (mêmes cinq MPL-2.0) ; les bibliothèques système (GTK, WebKitGTK, glibc, OpenSSL) ne sont pas redistribuées.
-- [x] Licence GPL-3.0-only et texte `Software/LICENSE` présents ; la bibliothèque rAthena intégrée et sa provenance sont déclarées.
+- [x] Licence GPL-3.0-only et texte `LICENSE` présents ; la bibliothèque rAthena intégrée et sa provenance sont déclarées.
 - [ ] Paquet de notices tiers (textes de licence) généré au packaging ; licence de la police `codicon.ttf` confirmée ; `ThirdPartyNotices.txt` de Monaco distribué.
 - [ ] Revue juridique indépendante de la compatibilité des licences, marque « RuneForge » et obligations de distribution — `BLOCKED_EXTERNAL`.
 - [ ] Licence : activation hors ligne raisonnable ; service distinct du moteur — compte marchand/serveur `BLOCKED_EXTERNAL`.
