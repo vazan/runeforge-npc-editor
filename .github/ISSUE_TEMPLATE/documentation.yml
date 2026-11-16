@@ -1,0 +1,63 @@
+name: Documentation problem
+description: Something in the README, the wiki or docs/ is wrong, unclear, missing, out of date or badly translated.
+title: "[Docs]: "
+labels: ["documentation"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for helping to keep the documentation honest. Issues in **English or French** are welcome (les tickets en français sont les bienvenus).
+
+        Where things live:
+        - the **[wiki](https://github.com/vazan/runeforge-npc-editor/wiki)** is bilingual (pages `EN-…` and `FR-…`); its sources are in the `wiki/` folder of this repository;
+        - the **`docs/`** folder holds the detailed, evidence-backed project documents (mostly in French);
+        - the **README** has an English and a French edition.
+
+        A statement that contradicts what the application really does is the most valuable kind of report. **Never paste secrets** (API keys, tokens, SSH keys, passwords).
+
+  - type: input
+    id: location
+    attributes:
+      label: Where is it?
+      description: The URL of the wiki page, or the path of the file (for example `docs/SECURITY.md`), and the section if you can.
+      placeholder: wiki/EN-Getting-Started, section "First launch"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: kind
+    attributes:
+      label: What kind of problem is it?
+      options:
+        - Wrong or out of date (it does not match the application)
+        - Unclear or confusing
+        - Missing information
+        - Translation problem (English and French disagree, or the wording is poor)
+        - Broken link or image
+        - Other
+    validations:
+      required: true
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: What is the problem?
+      description: What the text says, and what you observed instead (with the application version if relevant).
+    validations:
+      required: true
+
+  - type: textarea
+    id: suggestion
+    attributes:
+      label: Suggested fix (optional)
+      description: A rewording or a correct statement. A pull request is even better.
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: confirmations
+    attributes:
+      label: Before submitting
+      options:
+        - label: I searched the existing issues.
+          required: true

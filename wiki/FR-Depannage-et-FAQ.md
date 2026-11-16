@@ -66,6 +66,8 @@ Ouvrez un ticket avec les modèles : [nouveau ticket](https://github.com/vazan/r
 - **Bug report** — comporte une question obligatoire : un de vos fichiers a-t-il été modifié ou perdu ?
 - **Diagnostic report** — pour une fausse alerte, un problème manqué ou une documentation de commande erronée. Indiquez ce que vous avez observé sur un vrai serveur (RuneForge ne le lance jamais).
 - **Feature request** — décrivez le besoin avant la solution.
+- **Question or help** — quand vous n'êtes pas sûr qu'il s'agisse d'un bogue.
+- **Documentation problem** — quelque chose dans le README, le wiki ou `docs/` est faux, peu clair, manquant ou mal traduit.
 
 Éléments utiles et sans risque à joindre : la version (Paramètres › À propos), votre système, s'il s'agit d'un `.exe` Windows, d'un binaire Linux, d'un AppImage ou d'une construction depuis les sources, l'émulateur affiché dans la barre d'état, un extrait de script **minimal et anonymisé** (avec l'encodage, le BOM et les fins de ligne pour les bogues de gestion de fichiers), le **Rapport de projet copié en texte** (il ne contient jamais le contenu de vos scripts) et le journal de diagnostic si vous l'avez activé.
 

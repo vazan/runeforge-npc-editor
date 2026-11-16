@@ -73,6 +73,8 @@ Voir [Architecture](FR-Architecture) pour l'organisation et le graphe de dépend
 
 ## Contribuer
 
+La version courte est dans [`CONTRIBUTING.md`](https://github.com/vazan/runeforge-npc-editor/blob/HEAD/CONTRIBUTING.md) ; la liste de contrôle d'une pull request est dans le modèle de pull request du dépôt.
+
 1. Regardez les tickets ouverts et la [feuille de route](FR-Feuille-de-route). Pour tout changement important, ouvrez d'abord un ticket afin de convenir de l'approche.
 2. Créez une branche depuis `master` et gardez le changement ciblé.
 3. Lancez `pnpm check:all` (et `pnpm e2e` sous Windows si vous touchez au comportement de l'interface). Ajoutez ou mettez à jour des tests — pour une règle de diagnostic, incluez un test qui échouerait si la règle était retirée.

@@ -66,6 +66,8 @@ Open an issue with the templates: [new issue](https://github.com/vazan/runeforge
 - **Bug report** — includes a mandatory question on whether any of your files were changed or lost.
 - **Diagnostic report** — for a false alarm, a missed problem or wrong command documentation. Please include what you observed on a real server (RuneForge never runs it).
 - **Feature request** — describe the need before the solution.
+- **Question or help** — when you are not sure it is a bug.
+- **Documentation problem** — something in the README, the wiki or `docs/` is wrong, unclear, missing or badly translated.
 
 Useful, safe things to attach: the version (Settings › About), your OS, whether it is a Windows `.exe`, a Linux binary, an AppImage or a source build, the emulator shown in the status bar, a **minimal anonymised** script sample (with encoding, BOM and line endings for file-handling bugs), the **Project report copied as text** (it never contains your script contents) and the diagnostic log if you enabled it.
 
