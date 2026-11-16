@@ -68,7 +68,7 @@ Puis, dans GitHub : relire le brouillon et **le publier** (c'est seulement alors
 | Contrôle | Pourquoi |
 |---|---|
 | la version de `tauri.conf.json` n'est pas celle de la release | sinon l'application mise à jour se proposerait la même mise à jour sans fin |
-| l'exécutable est plus ancien que `tauri.conf.json`, ne contient pas la version | reconstruire après le changement de version |
+| l'exécutable est plus ancien que `tauri.conf.json`, ou (Windows) ne porte pas la version, en clair ou dans sa ressource de version | reconstruire après le changement de version. Un vrai binaire de Tauri n'écrit pas la version en clair (constaté sur 0.1.0-beta.1) : un `.exe` la porte en UTF-16 dans sa ressource de version, un ELF n'en porte aucune, si bien que pour Linux seule la date protège d'une construction antérieure au changement |
 | l'exécutable n'est pas de son système : en-tête `MZ` attendu pour `windows-*`, `ELF` pour `linux-*` | un exécutable Windows donné comme Linux (ou l'inverse) serait signé, haché, téléchargé… puis ne démarrerait jamais ; l'application le refuse aussi (`not_executable`) |
 | une plateforme inconnue (`macos-…`), en double, ou aucun exécutable | seuls Windows et Linux savent s'installer |
 | l'exécutable n'embarque pas la clé publique de production, ou embarque une clé de test (construction `e2e`) | une release signée ne serait pas vérifiable, ou serait signable par n'importe qui |
