@@ -1,8 +1,12 @@
 # Changelog
 
-Format inspiré de *Keep a Changelog*. Les versions suivent l'état réel du produit ; rien n'est publié.
+Format inspiré de *Keep a Changelog*. Les versions suivent l'état réel du produit.
 
 ## [Non publié]
+
+## [0.1.0-beta.1] — 2026-11-15
+
+**Première pré-version publique** (canal bêta, publiée comme *pre-release* GitHub). Windows x86_64 et Linux x86_64 (binaire brut). La clé de signature des mises à jour de production a été créée et sa clé publique est embarquée (`apps/desktop/src-tauri/update-public-key.txt`) : cette version peut donc déjà vérifier les mises à jour signées, sans qu'une mise à jour réelle ait encore été essayée contre GitHub. Pas de signature de code Windows ; la fenêtre Linux n'a été lancée que 20 secondes. Le dépôt de mises à jour proposé par défaut est désormais `vazan/runeforge-npc-editor` (c'était l'ancien dépôt parent `vazan/KingdomOfValhalla`). Le contenu de cette version est l'ensemble des entrées ci-dessous.
 
 ### Ajouté — fichiers de communauté pour un projet public
 

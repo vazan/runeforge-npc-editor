@@ -9,7 +9,7 @@ export type UpdateChannelSetting = "stable" | "beta";
  * Depot des releases dont l'application se met a jour (`proprietaire/depot`). Valeur par defaut des nouveaux profils : le depot
  * d'ou viennent les versions distribuees (voir docs/RELEASE.md) ; l'utilisateur peut le changer dans les reglages.
  */
-export const DEFAULT_UPDATE_REPOSITORY = "vazan/KingdomOfValhalla";
+export const DEFAULT_UPDATE_REPOSITORY = "vazan/runeforge-npc-editor";
 
 /** Memes regles que le coeur natif (`RepoRef::parse`) : deux noms de caracteres GitHub separes par `/`, jamais un chemin. */
 export function isUpdateRepository(text: string): boolean {
