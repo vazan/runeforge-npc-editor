@@ -1,0 +1,20 @@
+RuneForge Studio 0.1.0-beta.2 - pre-version
+
+RuneForge Studio est un outil non officiel pour les scripts rAthena,
+sans lien avec Gravity.
+
+Telechargements
+- Windows : executable Windows x86_64.
+- Linux : executable Linux x86_64 et AppImage pour installation manuelle.
+- update-manifest.json et update-manifest.json.sig : fichiers de mise a jour.
+
+Pour lancer l'AppImage sous Linux, rendez le fichier executable avec
+chmod +x, puis lancez-le. L'AppImage peut necessiter libfuse2 ou l'option
+--appimage-extract-and-run.
+
+Cette pre-version peut comporter des problemes. La compatibilite Linux depend
+de la distribution utilisee pour la construction. La mise a jour en place
+d'un AppImage n'a pas encore ete verifiee; conservez-en une copie et installez
+les prochaines versions manuellement.
+
+Code source : https://github.com/vazan/runeforge-npc-editor
