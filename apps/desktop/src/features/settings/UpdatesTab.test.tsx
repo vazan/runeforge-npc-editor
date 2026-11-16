@@ -53,14 +53,14 @@ describe("onglet Mises a jour", () => {
     expect(screen.getByText(/Nothing is contacted until you press/)).toBeTruthy();
     expect(screen.getByText("Installed version: 0.0.0-test")).toBeTruthy();
     expect(h.backend.updateChecks).toEqual([]);
-    expect(screen.getByRole("textbox", { name: /Repository/ })).toHaveProperty("value", "vazan/KingdomOfValhalla");
+    expect(screen.getByRole("textbox", { name: /Repository/ })).toHaveProperty("value", "vazan/runeforge-npc-editor");
   });
 
   it("cherche une mise a jour au clic seulement et annonce une application a jour", async () => {
     const { h, user } = await openUpdates({ reply: { kind: "upToDate", current: "0.0.0-test" } });
     await user.click(checkButton());
     expect(await screen.findByText("You have the latest version (0.0.0-test).")).toBeTruthy();
-    expect(h.backend.updateChecks).toEqual([{ repository: "vazan/KingdomOfValhalla", channel: "stable", token: null }]);
+    expect(h.backend.updateChecks).toEqual([{ repository: "vazan/runeforge-npc-editor", channel: "stable", token: null }]);
     expect(screen.queryByRole("button", { name: /install and restart/i })).toBeNull();
   });
 
