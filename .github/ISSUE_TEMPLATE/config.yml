@@ -1,9 +1,12 @@
-# Selecteur de tickets de GitHub : pas de ticket vierge, et deux liens utiles avant d'en ouvrir un.
+# GitHub issue chooser: no blank issue, and useful links before opening one.
 blank_issues_enabled: false
 contact_links:
   - name: Report a security vulnerability (private)
     url: https://github.com/vazan/runeforge-npc-editor/security/advisories/new
-    about: Do not open a public issue for a vulnerability. Use GitHub's private reporting (the repository owner must enable "Private vulnerability reporting" in Settings > Code security).
+    about: Do not open a public issue for a vulnerability. Use GitHub's private vulnerability reporting, and read the security policy first.
+  - name: Wiki, FAQ and troubleshooting
+    url: https://github.com/vazan/runeforge-npc-editor/wiki/EN-Troubleshooting-and-FAQ
+    about: Answers to common questions and a troubleshooting table. En français, voir la page FR-Depannage-et-FAQ du wiki.
   - name: Known limitations
     url: https://github.com/vazan/runeforge-npc-editor/blob/HEAD/docs/KNOWN_LIMITATIONS.md
     about: Check whether the behaviour you noticed is a documented limitation (Hercules support, Linux, installers, simulation...).

@@ -4,6 +4,12 @@ Format inspiré de *Keep a Changelog*. Les versions suivent l'état réel du pro
 
 ## [Non publié]
 
+### Ajouté — fichiers de communauté pour un projet public
+
+- **Formulaires de tickets** (`.github/ISSUE_TEMPLATE/`) : ajout de **`question.yml`** (question ou aide, étiquette `question` ; les tickets vierges sont désactivés et les Discussions ne sont pas activées) et de **`documentation.yml`** (problème de documentation, étiquette `documentation`). `diagnostic_report.yml` : le niveau de confiance proposé suit désormais l'interface (« unverified » / « non vérifié » au lieu de « unknown »). `config.yml` : lien vers la FAQ du wiki ; le texte public ne contient plus de note destinée au propriétaire.
+- **`.github/PULL_REQUEST_TEMPLATE.md`**, **`CONTRIBUTING.md`** et **`SECURITY.md`** (politique de sécurité : signalement privé, périmètre, limites connues ; aucun délai de réponse garanti).
+- **README** plus court (anglais et français) : une capture, points forts, démarrage rapide, liens ; le détail est dans le wiki. Pages du wiki « Dépannage et FAQ » et « Développement » (EN et FR) mises à jour.
+
 ### Corrigé — documentation : aperçu SFTP et références périmées
 
 - **Aperçu SFTP en lecture seule**, présent dans le code (`crates/remote-transport`, commande `sftp_dry_run`, `SftpDialog`, menu Fichier › Aperçu SFTP…) mais absent des documents, qui annonçaient le SSH/SFTP « à implémenter » : désormais décrit dans `STATUS.md` (M6, RF-018, vérifications du 2026-11-15 : 6 tests Rust et 5 tests TypeScript PASS), `KNOWN_LIMITATIONS.md`, `SECURITY.md` (commandes `sftp_dry_run` et `pick_destination_folder`, section « Aperçu SFTP », **deuxième lancement de processus : le client OpenSSH**), `ROADMAP.md`, `TEST_MATRIX.md` et les guides utilisateur FR/EN. Le **transfert** SSH/SFTP reste à réaliser ; l'aperçu n'a jamais été essayé contre un vrai serveur SSH. Aucun changement de code.

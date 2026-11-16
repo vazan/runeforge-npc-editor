@@ -73,6 +73,8 @@ See [Architecture](EN-Architecture) for the layout and the dependency graph.
 
 ## Contributing
 
+The short version is in [`CONTRIBUTING.md`](https://github.com/vazan/runeforge-npc-editor/blob/HEAD/CONTRIBUTING.md); the pull-request checklist is in the repository's pull-request template.
+
 1. Look at the open issues and the [Roadmap](EN-Roadmap). For anything sizeable, open an issue first to agree on the approach.
 2. Branch from `master`, keep the change focused.
 3. Run `pnpm check:all` (and `pnpm e2e` on Windows if you touched UI behaviour). Add or update tests — for a diagnostic rule, include a test that would fail if the rule were removed.

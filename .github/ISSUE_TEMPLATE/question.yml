@@ -1,0 +1,68 @@
+name: Question or help
+description: Ask how to do something, or check whether a behaviour is expected.
+title: "[Question]: "
+labels: ["question"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Questions in **English or French** are welcome (les questions en français sont les bienvenues).
+
+        **Before you ask**, the answer may already be written down:
+        - the [Troubleshooting and FAQ](https://github.com/vazan/runeforge-npc-editor/wiki/EN-Troubleshooting-and-FAQ) page of the wiki ([en français](https://github.com/vazan/runeforge-npc-editor/wiki/FR-Depannage-et-FAQ));
+        - the [known limitations](https://github.com/vazan/runeforge-npc-editor/blob/HEAD/docs/KNOWN_LIMITATIONS.md).
+
+        **Never paste secrets** (API keys, tokens, SSH keys, passwords). Share only a **minimal, anonymised** script excerpt, never a whole server.
+
+        Something is broken? Use the *Bug report* or *Diagnostic report* form instead. Found a security problem? Do **not** post it here: see the [security policy](https://github.com/vazan/runeforge-npc-editor/blob/HEAD/SECURITY.md).
+
+  - type: textarea
+    id: question
+    attributes:
+      label: What are you trying to do, and what is your question?
+      description: The task, what you tried, and what you saw or expected.
+    validations:
+      required: true
+
+  - type: input
+    id: app-version
+    attributes:
+      label: RuneForge Studio version
+      description: "Settings > About (Paramètres > À propos)."
+    validations:
+      required: false
+
+  - type: dropdown
+    id: platform
+    attributes:
+      label: Operating system
+      options:
+        - Windows 11
+        - Windows 10
+        - Linux
+        - Other
+    validations:
+      required: false
+
+  - type: dropdown
+    id: emulator
+    attributes:
+      label: Emulator profile shown in the status bar
+      options:
+        - rAthena
+        - Hercules
+        - Custom or unknown
+        - No server project (standalone script folder)
+        - Not relevant
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: confirmations
+    attributes:
+      label: Before submitting
+      options:
+        - label: I looked at the wiki FAQ, the known limitations and the existing issues.
+          required: true
+        - label: I removed every secret (keys, tokens, passwords) and private data from this question.
+          required: true
