@@ -23,7 +23,7 @@ Diagnostics rely on **reading** the server, never running it, so they are "proba
 | **Linux x86_64** | Builds; all TypeScript and Rust tests pass (Ubuntu 26.04 on WSL2); the executable was **launched for 20 seconds under WSLg** (it starts, nothing more). **Unverified**: WebKitGTK rendering, Monaco, input methods, keyboard, high-DPI, accessibility, an in-window update |
 | Other distributions, ARM | Not tried. The binary links dynamically to GTK 3, WebKitGTK 4.1, libsoup 3, glibc and OpenSSL 3, so it will not start on a distribution lacking them or older than the build machine |
 | macOS | Not supported |
-| Distribution | No installer, no `.deb`/`.rpm`, no code signing. An AppImage can be built (needs glibc ≥ 2.43 when built on Ubuntu 26.04) |
+| Distribution | Pre-release 0.1.0-beta.1: a raw Windows `.exe` and a raw Linux binary (glibc ≥ 2.39) on the Releases page. No installer, no `.deb`/`.rpm`, no code signing. An AppImage can be built (needs glibc ≥ 2.43 when built on Ubuntu 26.04) |
 | WebView2 / Windows 10 | Windows 11 is the tested system; Windows 10 is offered in bug templates but not a verified target |
 
 ## Features and their maturity
@@ -41,7 +41,7 @@ Diagnostics rely on **reading** the server, never running it, so they are "proba
 | Dialogue simulation | **Partial**: a local preview, not a server |
 | AI assistance | **Partial**: tested with a simulated provider only; no real provider verified |
 | SFTP | **Early**: read-only comparison; no upload |
-| Signed updates | **Implemented and tested against a fake GitHub**; no key and no real release yet |
+| Signed updates | **Implemented and tested against a fake GitHub**; the production key and a first signed release exist, but no update has been installed from a real release yet |
 | Extensions | **Static JSON manifests only**, temporary; no code, no permissions |
 
 ## Language engine limits

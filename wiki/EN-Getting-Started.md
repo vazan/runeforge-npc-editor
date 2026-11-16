@@ -2,7 +2,7 @@
 
 *🇫🇷 [Version française](FR-Premiers-Pas)*
 
-RuneForge Studio is a **pre-release** (version 0.0.0): no installer and no published release exist yet. Today you run it either from an executable you build yourself, or from a build someone gives you.
+RuneForge Studio is a **pre-release** (version 0.1.0-beta.1). A first [pre-release is published on the Releases page](https://github.com/vazan/runeforge-npc-editor/releases) for Windows and Linux; there is no installer, and you can also build it yourself from source.
 
 ## 1. Requirements
 
@@ -17,7 +17,9 @@ An AppImage can be built for Linux (`pnpm build:linux`) but needs a glibc as rec
 
 ## 2. Get the application
 
-There is nothing to download yet. Build it from source — the full procedure is in [Development](EN-Development). The short version:
+**Easiest: download a pre-release.** From the [Releases page](https://github.com/vazan/runeforge-npc-editor/releases), take the file for your system: `runeforge-studio-<version>-windows-x86_64.exe`, or `runeforge-studio-<version>-linux-x86_64` (it needs glibc 2.39 or newer; run `chmod +x` on it first). There is no installer: just run it. The Windows executable is not code-signed, so SmartScreen may warn on first launch.
+
+**Or build it from source** — the full procedure is in [Development](EN-Development). The short version:
 
 ```bash
 pnpm install

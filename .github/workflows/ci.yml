@@ -1,6 +1,6 @@
 # CI RuneForge Studio - le projet est a la racine du depot (plus de dossier `Software/`, voir docs/DECISIONS.md DEC-048).
-# ECRITE MAIS PAS ENCORE EXECUTEE SUR UN RUNNER GITHUB (voir docs/DECISIONS.md DEC-013) : les memes commandes
-# ont ete rejouees a la main sous Windows 11 et sous Ubuntu 26.04 (WSL2), voir docs/STATUS.md.
+# EXECUTEE SUR GITHUB : verte sur `master` (voir docs/STATUS.md, « Publication de 0.1.0-beta.1 » ; historique : docs/DECISIONS.md DEC-013).
+# Les memes commandes se rejouent a la main sous Windows 11 et sous Ubuntu 26.04 (WSL2).
 name: ci
 
 on:

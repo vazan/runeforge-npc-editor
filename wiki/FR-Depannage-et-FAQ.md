@@ -17,7 +17,7 @@
 | L'enregistrement a été bloqué | Un caractère ne peut pas être représenté dans l'encodage du fichier. RuneForge refuse de le remplacer en silence ; changez ou retirez le caractère |
 | « Ce dossier n'a pas encore de configuration RuneForge » | Information. Choisissez *Créer la configuration* seulement si vous voulez un `.runeforge/project.json` |
 | **Le panneau Git demande d'activer Git** | Git est refusé tant que vous ne l'autorisez pas pour ce projet (boîte de confirmation). N'acceptez que pour des dépôts de confiance |
-| « Cette version ne peut pas vérifier les mises à jour » | Normal aujourd'hui : aucune clé de signature de production ni vraie release n'existe encore. Voir [Mises à jour](FR-Mises-a-jour) |
+| « Cette version ne peut pas vérifier les mises à jour » | La version est antérieure à la clé de production des mises à jour (tout ce qui a été construit avant 0.1.0-beta.1). Installez une fois une release depuis la [page des Releases](https://github.com/vazan/runeforge-npc-editor/releases) ; les versions suivantes pourront ensuite se mettre à jour sur place. Voir [Mises à jour](FR-Mises-a-jour) |
 | Les tests de bout en bout échouent une fois sur une machine chargée | Certaines étapes qui pilotent la souris ou la liste de complétion dépendent du timing. Rejouez l'étape fautive seule sur une machine au repos avant de conclure à une régression |
 | Linux : la fenêtre ne s'ouvre pas | Installez `libwebkit2gtk-4.1-0`, `libgtk-3-0`, `libssl3` ; un binaire construit avec une glibc plus récente ne démarre pas sur une distribution plus ancienne. Pour un essai rapide sous WSL : `GDK_BACKEND=x11 ./runeforge-studio` |
 
@@ -39,7 +39,7 @@ Il est conçu pour ne pas pouvoir le faire en silence : aucune écriture sans vo
 Windows 11 est entièrement vérifié. Linux x86_64 se construit et passe tous les tests, mais sa fenêtre a très peu été testée. macOS n'est pas pris en charge.
 
 **Existe-t-il un installateur ou un téléchargement ?**
-Pas encore. Construisez depuis les sources ([Développement](FR-Developpement)). Aucune release n'a été publiée.
+Il n'y a pas d'installateur, mais il y a un téléchargement : le `.exe` Windows et le binaire Linux de la pré-version 0.1.0-beta.1 sont sur la page des Releases (voir [Premiers pas](FR-Premiers-Pas)). Vous pouvez aussi construire depuis les sources ([Développement](FR-Developpement)).
 
 **Pourquoi « RuneForge Studio » ?**
 C'est un nom de travail ; une recherche de marque n'a pas été faite.

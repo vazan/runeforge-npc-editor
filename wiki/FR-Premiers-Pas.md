@@ -2,7 +2,7 @@
 
 *🇬🇧 [English version](EN-Getting-Started)*
 
-RuneForge Studio est une **pré-version** (version 0.0.0) : il n'existe encore ni installateur ni version publiée. Aujourd'hui, on le lance depuis un exécutable que l'on construit soi-même, ou depuis une version que quelqu'un vous remet.
+RuneForge Studio est une **pré-version** (version 0.1.0-beta.1). Une première [pré-version est publiée sur la page des Releases](https://github.com/vazan/runeforge-npc-editor/releases) pour Windows et Linux ; il n'y a pas d'installateur, et vous pouvez aussi le construire vous-même depuis les sources.
 
 ## 1. Prérequis
 
@@ -17,7 +17,9 @@ Un AppImage peut être construit pour Linux (`pnpm build:linux`), mais il exige 
 
 ## 2. Obtenir l'application
 
-Il n'y a encore rien à télécharger. Construisez-la depuis les sources — la procédure complète est dans [Développement](FR-Developpement). En bref :
+**Le plus simple : télécharger une pré-version.** Sur la [page des Releases](https://github.com/vazan/runeforge-npc-editor/releases), prenez le fichier de votre système : `runeforge-studio-<version>-windows-x86_64.exe`, ou `runeforge-studio-<version>-linux-x86_64` (il exige une glibc 2.39 ou plus récente ; faites d'abord `chmod +x`). Il n'y a pas d'installateur : lancez-le simplement. L'exécutable Windows n'est pas signé, donc SmartScreen peut avertir au premier lancement.
+
+**Ou construisez-la depuis les sources** — la procédure complète est dans [Développement](FR-Developpement). En bref :
 
 ```bash
 pnpm install

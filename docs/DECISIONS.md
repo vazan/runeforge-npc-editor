@@ -128,6 +128,7 @@ et doivent être revues au jalon indiqué. Date de la première session : 2026-1
   projet extrait dans son propre dépôt. Il n'a jamais tourné ; son statut est `BLOCKED_EXTERNAL`.
 - **Mise à jour (DEC-048, 2026-11-15)** : le projet est maintenant à la racine de son propre dépôt ; le fichier a été réécrit sans le préfixe `Software/`.
   Il n'a toujours pas tourné sur un runner GitHub (`BLOCKED_EXTERNAL`).
+- **Mise à jour (2026-11-15)** : le CI a tourné sur GitHub et est vert sur `master` (`f98807a`, `3d4d36c`, `998ff6c` ; série de `998ff6c` : 7 tâches, dont l'E2E Windows et la construction Tauri sous Windows et Ubuntu). Le statut `BLOCKED_EXTERNAL` ci-dessus est levé ; voir `STATUS.md`, « Publication de 0.1.0-beta.1 ».
 
 ---
 

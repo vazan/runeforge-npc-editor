@@ -4,7 +4,7 @@
 
 RuneForge can update itself from the **releases of a GitHub repository** — but only when you ask, and only with a version signed by the publisher.
 
-> **Current state:** the mechanism is implemented and tested against a local fake GitHub server, but **no signing key exists and no real release has been published yet**. Until the maintainer creates the key and publishes a first release, the application answers "this build cannot verify updates" (`not_configured`). See [Releasing](#for-maintainers-publishing-a-release).
+> **Current state:** the mechanism is implemented and tested against a local fake GitHub server. The production signing key exists and the first signed release, [0.1.0-beta.1](https://github.com/vazan/runeforge-npc-editor/releases), is published — but **no update has been installed from a real release yet**, and the real TLS connection to `api.github.com` has not been exercised from the application. Because 0.1.0-beta.1 is a beta, choose **"Stable and beta releases"** under Settings › Updates to be offered the next beta (the default "Stable releases only" ignores them). Builds made before the production key was embedded answer "this build cannot verify updates" (`not_configured`). See [Releasing](#for-maintainers-publishing-a-release).
 
 ## For users: updating
 

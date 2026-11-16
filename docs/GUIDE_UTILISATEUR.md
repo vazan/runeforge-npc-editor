@@ -5,7 +5,7 @@
 
 ## 1. Installation
 
-Aucun installateur n'existe encore : l'application se lance depuis l'exécutable produit par `pnpm --filter @runeforge/desktop tauri build --no-bundle` (dossier `target/release/`). Elle a besoin du runtime **WebView2** de Microsoft (fourni avec Windows 11).
+Il n'y a pas d'installateur : l'application est un exécutable unique. Téléchargez `runeforge-studio-<version>-windows-x86_64.exe` (ou le fichier Linux, voir plus bas) sur la [page des Releases](https://github.com/vazan/runeforge-npc-editor/releases) et lancez-le — ou construisez-le avec `pnpm --filter @runeforge/desktop tauri build --no-bundle` (dossier `target/release/`). L'exécutable Windows n'est pas signé : SmartScreen peut avertir au premier lancement. Elle a besoin du runtime **WebView2** de Microsoft (fourni avec Windows 11).
 **Linux** : l'exécutable `runeforge-studio` (sans extension) se construit et ses tests passent (Ubuntu 26.04), mais **la fenêtre n'a jamais été ouverte sous Linux** : son affichage, son clavier et sa saisie ne sont pas vérifiés. Il lui faut `libwebkit2gtk-4.1`, `libgtk-3` et `libssl3`, fournis par votre distribution ; un fichier téléchargé depuis GitHub n'est pas exécutable : `chmod +x runeforge-studio-<version>-linux-x86_64`. Voir [`DEV_SETUP.md`](DEV_SETUP.md). Les versions suivantes s'installent depuis l'application (**Aide › Mises à jour…**, voir § 12).
 
 ## 2. Premier lancement
@@ -105,7 +105,7 @@ Le **journal de diagnostic local** est **désactivé par défaut** (Paramètres 
 
 ## 10. Limites
 
-L'adaptateur Hercules, l'édition directe du graphe général et l'intégration de fournisseurs IA réels restent incomplets ; SSH/SFTP se limite à la comparaison en lecture seule (pas de transfert). La simulation et l'IA sont des prévisualisations limitées et ne remplacent pas un essai sur serveur. L'application fonctionne comme exécutable seul sous Windows. L'installateur reste à faire, tout comme l'ouverture de la fenêtre sous Linux (l'exécutable s'y construit et ses tests passent, mais il n'y a jamais été lancé) ; la mise à jour depuis une release GitHub (§ 12) existe sous Windows et sous Linux, ne se lance jamais seule, et n'a pas encore été essayée avec le vrai GitHub. Le rapport de projet est un instantané des fichiers indexés. La matrice de compatibilité décrit la couverture des diagnostics rAthena Renewal. Voir [`COMPATIBILITY.md`](COMPATIBILITY.md).
+L'adaptateur Hercules, l'édition directe du graphe général et l'intégration de fournisseurs IA réels restent incomplets ; SSH/SFTP se limite à la comparaison en lecture seule (pas de transfert). La simulation et l'IA sont des prévisualisations limitées et ne remplacent pas un essai sur serveur. L'application fonctionne comme exécutable seul sous Windows. L'installateur reste à faire, tout comme l'ouverture de la fenêtre sous Linux (l'exécutable s'y construit et ses tests passent, mais il n'y a jamais été lancé) ; la mise à jour depuis une release GitHub (§ 12) existe sous Windows et sous Linux, ne se lance jamais seule, et aucune mise à jour n'a encore été installée depuis une vraie release (la première, 0.1.0-beta.1, est publiée ; il en faut une seconde pour l'essayer). Le rapport de projet est un instantané des fichiers indexés. La matrice de compatibilité décrit la couverture des diagnostics rAthena Renewal. Voir [`COMPATIBILITY.md`](COMPATIBILITY.md).
 
 ## 11. En cas de problème
 

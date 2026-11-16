@@ -23,7 +23,7 @@ Les diagnostics reposent sur la **lecture** du serveur, jamais sur son exécutio
 | **Linux x86_64** | Se construit ; tous les tests TypeScript et Rust passent (Ubuntu 26.04 sous WSL2) ; l'exécutable a été **lancé 20 secondes sous WSLg** (il démarre, rien de plus). **Non vérifiés** : rendu de WebKitGTK, Monaco, méthodes de saisie, clavier, hautes résolutions, accessibilité, mise à jour dans la fenêtre |
 | Autres distributions, ARM | Non essayés. Le binaire lie dynamiquement GTK 3, WebKitGTK 4.1, libsoup 3, la glibc et OpenSSL 3 : il ne démarre pas sur une distribution qui ne les a pas ou plus ancienne que la machine de construction |
 | macOS | Non pris en charge |
-| Distribution | Ni installateur, ni `.deb`/`.rpm`, ni signature de code. Un AppImage peut être construit (glibc ≥ 2.43 exigée s'il est construit sous Ubuntu 26.04) |
+| Distribution | Pré-version 0.1.0-beta.1 : un `.exe` Windows brut et un binaire Linux brut (glibc ≥ 2.39) sur la page des Releases. Ni installateur, ni `.deb`/`.rpm`, ni signature de code. Un AppImage peut être construit (glibc ≥ 2.43 exigée s'il est construit sous Ubuntu 26.04) |
 | Windows 10 | Windows 11 est le système testé ; Windows 10 est proposé dans les modèles de tickets mais n'est pas une cible vérifiée |
 
 ## Fonctions et leur maturité
@@ -41,7 +41,7 @@ Les diagnostics reposent sur la **lecture** du serveur, jamais sur son exécutio
 | Simulation de dialogue | **Partiel** : un aperçu local, pas un serveur |
 | Assistance IA | **Partiel** : testée avec un fournisseur simulé seulement ; aucun fournisseur réel vérifié |
 | SFTP | **Précoce** : comparaison en lecture seule ; pas de transfert |
-| Mises à jour signées | **Implémentées et testées contre un faux GitHub** ; ni clé ni vraie release pour l'instant |
+| Mises à jour signées | **Implémentées et testées contre un faux GitHub** ; la clé de production et une première release signée existent, mais aucune mise à jour n'a encore été installée depuis une vraie release |
 | Extensions | **Manifestes JSON statiques seulement**, temporaires ; ni code, ni permissions |
 
 ## Limites du moteur de langage

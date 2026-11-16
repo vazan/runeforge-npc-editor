@@ -28,7 +28,7 @@
 | Stack | Tauri 2 · React · TypeScript · Rust · Monaco |
 | Interface | English / Français · light / dark / system |
 | License / Licence | GPL-3.0-only |
-| Status / État | Pre-release (version 0.0.0, no published build) / Pré-version (0.0.0, aucune version publiée) |
+| Status / État | Pre-release 0.1.0-beta.1, see [Releases](https://github.com/vazan/runeforge-npc-editor/releases) / Pré-version 0.1.0-beta.1, voir les [Releases](https://github.com/vazan/runeforge-npc-editor/releases) |
 
 ## Where the source of truth lives / Où se trouve la référence
 

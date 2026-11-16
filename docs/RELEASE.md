@@ -1,7 +1,7 @@
 # Livraison et mises à jour signées
 
 > Comment publier une version de RuneForge Studio que les utilisateurs installent **depuis l'application** (Paramètres › Mises à jour), à partir des **releases d'un dépôt GitHub**, privé ou non. Décision : [DEC-046](DECISIONS.md). Menaces et garde-fous : [`SECURITY.md`](SECURITY.md) (« Mises à jour signées »).
-> État : l'outillage et l'application sont testés hors ligne (voir [`STATUS.md`](STATUS.md)). **Aucune release réelle n'a été publiée ni signée** ; la clé de signature de production n'existe pas encore (étape 1). Le comportement face au vrai GitHub (TLS, redirections des fichiers d'un dépôt privé) n'a pas été vérifié : voir « Premier contrôle réel ».
+> État : l'outillage et l'application sont testés hors ligne (voir [`STATUS.md`](STATUS.md)). **La clé de signature de production existe et une première release, 0.1.0-beta.1, est publiée depuis le 2026-11-15** (pre-release, canal bêta ; Windows et Linux). **Aucune mise à jour n'a encore été installée depuis une vraie release** : le comportement de l'application face au vrai GitHub (TLS, redirections de téléchargement) reste à vérifier avec une seconde release : voir « Premier contrôle réel ».
 
 ## Le principe en dix lignes
 
@@ -119,7 +119,7 @@ Comme pour Windows, il doit être construit **après** la configuration de la cl
 
 ## 4. Premier contrôle réel (avant de compter dessus)
 
-Ce que les tests hors ligne ne peuvent pas prouver : le TLS réel vers `api.github.com` (schannel), les redirections de téléchargement d'un dépôt privé, les limites de l'API, le comportement d'un antivirus. **Avant la première distribution**, publiez une release de test (version supérieure à celle d'un exemplaire de production construit avec la vraie clé) dans le vrai dépôt et vérifiez de bout en bout : Rechercher → proposée → Installer → redémarrage sur la nouvelle version. À noter dans `STATUS.md`.
+Ce que les tests hors ligne ne peuvent pas prouver : le TLS réel vers `api.github.com` (schannel), les redirections de téléchargement d'un dépôt privé, les limites de l'API, le comportement d'un antivirus. **Fait le 2026-11-15** : la première release (0.1.0-beta.1) est publiée dans le vrai dépôt, ses fichiers se téléchargent sans authentification et l'exécutable téléchargé a le SHA-256 du manifeste signé (`STATUS.md`, « Publication de 0.1.0-beta.1 »). **Reste à faire** : publier une seconde release (version supérieure) puis, depuis un exemplaire de la première, vérifier de bout en bout : Rechercher → proposée → Installer → redémarrage sur la nouvelle version. C'est le premier essai réel du TLS de l'application vers `api.github.com` ; à noter dans `STATUS.md`. Rappel : une bêta ne reçoit la bêta suivante qu'avec le canal « Versions stables et bêta ».
 
 ## 5. Si une mise à jour échoue
 

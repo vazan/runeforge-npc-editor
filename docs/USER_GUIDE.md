@@ -5,7 +5,7 @@
 
 ## 1. Installation
 
-There is no installer yet: the application starts from the executable built by `pnpm --filter @runeforge/desktop tauri build --no-bundle` (folder `target/release/`). It needs Microsoft's **WebView2** runtime (shipped with Windows 11).
+There is no installer: the application is a single executable. Download `runeforge-studio-<version>-windows-x86_64.exe` (or the Linux file, see below) from the [Releases page](https://github.com/vazan/runeforge-npc-editor/releases) and run it — or build it with `pnpm --filter @runeforge/desktop tauri build --no-bundle` (folder `target/release/`). The Windows executable is not code-signed, so SmartScreen may warn on first launch. It needs Microsoft's **WebView2** runtime (shipped with Windows 11).
 **Linux**: the `runeforge-studio` executable (no extension) builds and its tests pass (Ubuntu 26.04), but **the window has never been opened on Linux**: its display, keyboard and input are not verified. It needs `libwebkit2gtk-4.1`, `libgtk-3` and `libssl3` from your distribution; a file downloaded from GitHub is not executable: `chmod +x runeforge-studio-<version>-linux-x86_64`. See [`DEV_SETUP.md`](DEV_SETUP.md). Later versions install from inside the application (**Help › Updates…**, see § 12).
 
 ## 2. First launch
@@ -105,7 +105,7 @@ The **local diagnostic log** is **off by default** (Settings › Privacy). When 
 
 ## 10. Limits
 
-Direct editing of the general-purpose graph and execution against a truly isolated rAthena test server remain incomplete. Declarative extension manifests are temporary and static only. Simulation and AI are limited previews, not substitutes for a real server test; no real AI provider has been verified. The Hercules adapter is also incomplete, and SSH/SFTP offers only the read-only comparison (no upload). Windows currently runs from a standalone executable. The installer is pending, and so is running the window on Linux (the executable builds and its tests pass there, but it has never been started); updating from a GitHub release (§ 12) exists on Windows and Linux, never runs by itself, and has not yet been tried against the real GitHub. The project report is a snapshot of indexed files. The [compatibility matrix](COMPATIBILITY.md) describes diagnostic coverage for rAthena Renewal.
+Direct editing of the general-purpose graph and execution against a truly isolated rAthena test server remain incomplete. Declarative extension manifests are temporary and static only. Simulation and AI are limited previews, not substitutes for a real server test; no real AI provider has been verified. The Hercules adapter is also incomplete, and SSH/SFTP offers only the read-only comparison (no upload). Windows currently runs from a standalone executable. The installer is pending, and so is running the window on Linux (the executable builds and its tests pass there, but it has never been started); updating from a GitHub release (§ 12) exists on Windows and Linux, never runs by itself, and no update has yet been installed from a real release (the first release, 0.1.0-beta.1, is published; a second one is needed to try it). The project report is a snapshot of indexed files. The [compatibility matrix](COMPATIBILITY.md) describes diagnostic coverage for rAthena Renewal.
 
 ## 11. When something goes wrong
 
