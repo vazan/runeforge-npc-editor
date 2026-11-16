@@ -40,6 +40,27 @@ Un dépôt privé n'est visible que d'un compte autorisé. Chaque utilisateur cr
 
 ## 3. Publier une version
 
+### Lanceur unique Windows + Linux
+
+Après avoir mis à jour la version et les notes, commitez tous les changements et poussez le commit. Dans PowerShell, saisissez localement le chemin de la clé de production et son mot de passe aux invites :
+
+```powershell
+$env:TAURI_SIGNING_PRIVATE_KEY_PATH = Read-Host 'Chemin de la clé privée'
+$env:TAURI_SIGNING_PRIVATE_KEY_PASSWORD = [System.Net.NetworkCredential]::new('', (Read-Host 'Mot de passe' -AsSecureString)).Password
+try {
+    pnpm exec tsx scripts\release\build.ts --notes scripts\release\notes-0.1.0-beta.2.txt --repo vazan/runeforge-npc-editor --confirm-wsl-sync --confirm-appimage-licenses
+} finally {
+    Remove-Item Env:\TAURI_SIGNING_PRIVATE_KEY_PASSWORD
+    Remove-Item Env:\TAURI_SIGNING_PRIVATE_KEY_PATH
+}
+```
+
+Remplacez le chemin des notes et le dépôt au besoin. Ne partagez jamais la clé ni le mot de passe et ne les enregistrez pas dans le dépôt. Le lanceur exige un dépôt propre et des notes suivies par Git; il vérifie, construit Windows et Linux, signe le manifeste et crée un **brouillon** ciblant le commit courant, puis y ajoute l'AppImage. Le manifeste conserve l'ELF brut Linux pour les mises à jour. Relisez et publiez le brouillon manuellement; la mise à jour en place d'un AppImage n'a pas été vérifiée.
+
+`--confirm-wsl-sync` autorise les suppressions de la synchronisation dans `~/runeforge-npc-editor` de WSL et le remplacement des artefacts Linux; vérifiez ces fichiers avant de l'utiliser. `--confirm-appimage-licenses` confirme que la revue des licences, notices et accès aux sources est faite. Si les outils AppImage manquent, `--allow-download` autorise leur téléchargement et leur exécution. Le lanceur s'arrête à la première erreur; si l'ajout de l'AppImage échoue, le brouillon existe déjà et doit être complété manuellement. Il ne supprime pas un dossier de release existant.
+
+### Étapes manuelles
+
 ```bash
 # 1. Changer la version (une seule source : apps/desktop/src-tauri/tauri.conf.json), tenir CHANGELOG.md à jour
 # 2. Vérifier
