@@ -32,7 +32,7 @@ Les fichiers nouvellement créés sont conservés à la restauration. Vous gére
 - L'authentification se fait par **clé publique via votre agent SSH** uniquement — pas de mot de passe. Il utilise le **client OpenSSH `ssh` déjà installé** (sous Windows `System32\OpenSSH\ssh.exe`, sous Linux `/usr/bin/ssh`), avec la clé d'hôte vérifiée strictement contre celle que vous avez épinglée.
 - Chaque fichier est rapporté **Identique**, **Différent** ou **Absent à distance**, avec les octets locaux et distants.
 
-> État : le client du protocole est couvert par des tests unitaires. Les documents de preuve du projet ne consignent pas d'essai contre un vrai serveur distant, et décrivent encore le transport distant comme « à implémenter » — considérez cet aperçu comme **précoce**. Obtenez la clé d'hôte par un canal fiable.
+> État : couvert par des tests unitaires sur des données simulées (6 tests Rust et 5 tests TypeScript, rejoués le 2026-11-15) et par aucun scénario de bout en bout. **Aucun essai contre un vrai serveur SSH n'est consigné** — considérez cet aperçu comme **précoce**. L'application ne peut pas vérifier la clé d'hôte que vous épinglez : obtenez-la par un canal fiable. Détails : [`docs/SECURITY.md`](https://github.com/vazan/runeforge-npc-editor/blob/HEAD/docs/SECURITY.md) (« Aperçu SFTP ») et [`docs/KNOWN_LIMITATIONS.md`](https://github.com/vazan/runeforge-npc-editor/blob/HEAD/docs/KNOWN_LIMITATIONS.md).
 
 ## Ce qui n'existe pas
 

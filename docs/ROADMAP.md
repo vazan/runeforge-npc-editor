@@ -71,7 +71,8 @@ Légende des dépendances : `→` « nécessite ».
 - [x] **M6-S1** Quatre assistants rAthena (portail, téléporteur, boutique et soigneur) avec aperçu et validation statique.
 - [x] **M6-S2** Panneau Git de lecture seule avec statut et comparaison à `HEAD` (vérifié sous Windows).
 - [x] **M6-S3** Déploiement vers un dossier local avec dry-run, sauvegarde et restauration (vérifié sous Windows).
-- [ ] Assistants supplémentaires (buffer, quête) et transport SSH/SFTP avec validation sur un serveur de test.
+- [x] **Aperçu SFTP en lecture seule** : comparaison de scripts enregistrés avec un dossier distant (`crates/remote-transport`, commande `sftp_dry_run`, `SftpDialog`), clé d'hôte épinglée, accord par boîte de dialogue native, client OpenSSH du système. Testé hors ligne seulement (flux simulés ; aucun essai contre un vrai serveur SSH, aucune étape E2E) : voir `STATUS.md` et `KNOWN_LIMITATIONS.md`.
+- [ ] Assistants supplémentaires (buffer, quête) et **transfert** SSH/SFTP (téléversement, sauvegarde et restauration distantes) avec validation sur un serveur de test.
 
 ## M7 — Studio visuel (→ M2)
 - [x] **M7-S1** Édition par blocs de dialogues avec import partiel, code brut verrouillé, aperçu et modifications ciblées (vérifiée sous Windows).

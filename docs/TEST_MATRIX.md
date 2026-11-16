@@ -198,6 +198,14 @@ réécrite dans l'autre ordre et l'explorateur rafraîchi → l'alerte disparaî
 36. thème sombre ; 37. rechargement automatique après modification externe ; 38. conflit sans écrasement silencieux ; 39. plantage (`taskkill /F`) → instantané → dialogue de
 récupération → restauration → enregistrement ; 40. fermeture de fenêtre différée puis abandon ; 41. aucune erreur console (CSP incluse).
 
+## Vérifications de l'aperçu SFTP en lecture seule (2026-11-15)
+
+| Domaine | Fichier / commande | Niveau | Tests | État |
+|---|---|---|---|---|
+| Cible littérale et clé d'hôte `ssh-ed25519` épinglée ; ligne de commande `ssh` fixe (sous-système `sftp`, clé d'hôte dans un fichier temporaire, aucune configuration utilisateur) ; chemins bornés, canoniques et uniques ; lecture et empreinte d'un fichier régulier seulement ; absence distincte du refus (lien symbolique, chemin changé, taille) ; paquets mal formés, surdimensionnés ou incohérents refusés | `crates/remote-transport/src/tests.rs` (`cargo test -p runeforge-remote-transport --offline`) | unitaire Rust (flux en mémoire, aucun serveur) | 6 | PASS |
+| Dialogue : aucune connexion avant l'action explicite, bouton désactivé tant que le formulaire est incomplet, appel `sftp_dry_run` avec les bons arguments, résultats *Identique* / *Différent* / *Absent à distance*, fichier du projet inchangé, `cancelled` et `connection_failed` sans détail du serveur ni résultat périmé ; titre de la commande traduit en FR et EN | `apps/desktop/src/features/remote/SftpDialog.test.tsx`, `apps/desktop/src/app/commands-sftp.test.ts` (`pnpm exec vitest run apps/desktop/src/features/remote apps/desktop/src/app/commands-sftp.test.ts`) | composants (jsdom) + unitaire | 5 (3 + 2) | PASS |
+| **Non exécuté** : connexion à un vrai serveur SSH/SFTP, étape E2E, Linux | — | — | — | voir « Prévus » |
+
 ## Prévus (non exécutés)
 
 | Domaine | Jalon | Remarque |
@@ -209,6 +217,6 @@ récupération → restauration → enregistrement ; 40. fermeture de fenêtre d
 | Performance : démarrage, latence de frappe (la latence de complétion et l'indexation de 5 000 scripts sont mesurées) | M5 | `docs/PERFORMANCE.md` |
 | Packaging (installateur) | M5 | `BLOCKED_EXTERNAL` (outils de paquetage téléchargés) |
 | Mises à jour contre le vrai GitHub (première release réelle, clé de production) | M5-S4 | `BLOCKED_EXTERNAL` : action du propriétaire (`docs/RELEASE.md`) |
-| SFTP (serveur de test local) | M6 | Le déploiement actuel cible un dossier local. |
+| SFTP contre un vrai serveur SSH (aperçu en lecture seule, puis transfert) | M6 | L'aperçu est testé sur des flux simulés en mémoire (section « Vérifications de l'aperçu SFTP ») ; aucun essai contre un serveur SSH, aucune étape E2E, et le transfert n'existe pas. Exige un serveur SSH de test, avec l'accord du propriétaire. |
 | Aller-retour code ↔ graphe général | M7 | L'éditeur actuel couvre les dialogues par blocs. |
 | Simulateur, IA | M8 | vrai modèle : `BLOCKED_EXTERNAL` |

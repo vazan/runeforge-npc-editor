@@ -4,7 +4,7 @@
 > frontend** (arête « normale » des dépendances) ; les outils de construction et de test ne sont pas livrés. Ce tableau est un **inventaire**, pas le paquet de notices : les textes de licence et avis de droits
 > d'auteur de chaque composant doivent être rassemblés au moment du packaging (voir `LEGAL.md`). Ce n'est pas un avis juridique.
 
-La bibliothèque de scripting rAthena générée dans `packages/emulator-rathena/src/script-library.ts` n'est pas une dépendance pnpm ou Cargo et n'apparaît donc pas dans le tableau ci-dessous. Elle contient 667 commandes, dont le texte du manuel de 662 commandes, est attribuée à rAthena Dev Team et est distribuée sous GPL-3.0-only ; voir `Software/LICENSE`.
+La bibliothèque de scripting rAthena générée dans `packages/emulator-rathena/src/script-library.ts` n'est pas une dépendance pnpm ou Cargo et n'apparaît donc pas dans le tableau ci-dessous. Elle contient 667 commandes, dont le texte du manuel de 662 commandes, est attribuée à rAthena Dev Team et est distribuée sous GPL-3.0-only ; voir `LICENSE`.
 
 Depuis les mises à jour signées (DEC-046), l'exécutable lie aussi `ureq` (client HTTP), `native-tls` (le TLS du système : `schannel` sous Windows, OpenSSL sous Linux), `minisign-verify` et leurs dépendances : 13 composants de plus qu'au 2026-11-09. La fonctionnalité `native-tls-no-default` de `ureq` n'embarque pas la liste des certificats racine de Mozilla (`webpki-root-certs`, CDLA-Permissive-2.0), que l'application n'utilise pas (DEC-047).
 

@@ -32,7 +32,7 @@ Newly created files are kept on restore. You still manage your `scripts_*.conf` 
 - Authentication is by **public key through your SSH agent** only — no passwords. It uses the **OpenSSH `ssh` client already installed** (on Windows `System32\OpenSSH\ssh.exe`, on Linux `/usr/bin/ssh`) with the host key checked strictly against the one you pinned.
 - Each file is reported as **Identical**, **Different** or **Missing remotely**, with local and remote byte counts.
 
-> Status: the protocol client is covered by unit tests. The project's evidence documents do not record a run against a real remote server, and they still describe remote transport as "to implement" — treat this preview as **early**. Obtain the host key through a trusted channel.
+> Status: covered by unit tests on simulated data (6 Rust and 5 TypeScript tests, run on 2026-11-15) and by no end-to-end scenario. **No run against a real SSH server is recorded** — treat this preview as **early**. The application cannot verify the host key you pin, so obtain it through a trusted channel. Details: [`docs/SECURITY.md`](https://github.com/vazan/runeforge-npc-editor/blob/HEAD/docs/SECURITY.md) ("Aperçu SFTP") and [`docs/KNOWN_LIMITATIONS.md`](https://github.com/vazan/runeforge-npc-editor/blob/HEAD/docs/KNOWN_LIMITATIONS.md).
 
 ## What is not there
 

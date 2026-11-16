@@ -6,7 +6,7 @@
 ## Principes (CLAUDE.md §0, §14, §16)
 
 1. **Le code de l'utilisateur est du texte, jamais un programme.** Le parseur est pur : il ne lit que le texte qu'on lui donne, n'exécute rien et n'ouvre aucun fichier.
-2. **Aucune télémétrie.** Le réseau n'est utilisé que si l'utilisateur déclenche une fonction de connexion : les mises à jour ne contactent GitHub qu'après l'appui sur « Rechercher des mises à jour » (DEC-046, jamais au démarrage ni en arrière-plan) ; Git demeure local; la proposition IA (facultative) transmet le NPC affiché et le prompt, tandis que le générateur autonome transmet le prompt seul. Chaque demande exige un consentement et une destination hors boucle locale exige une confirmation distincte. La clé API est volatile et n'est jamais enregistrée. Le serveur de jeu n'est jamais lancé par l'application.
+2. **Aucune télémétrie.** Le réseau n'est utilisé que si l'utilisateur déclenche une fonction de connexion : les mises à jour ne contactent GitHub qu'après l'appui sur « Rechercher des mises à jour » (DEC-046, jamais au démarrage ni en arrière-plan) ; Git demeure local; l'aperçu SFTP (lecture seule) ne se connecte qu'à l'hôte saisi, après un accord donné dans une boîte de dialogue native ; la proposition IA (facultative) transmet le NPC affiché et le prompt, tandis que le générateur autonome transmet le prompt seul. Chaque demande exige un consentement et une destination hors boucle locale exige une confirmation distincte. La clé API est volatile et n'est jamais enregistrée. Le serveur de jeu n'est jamais lancé par l'application.
 3. **Le frontend ne manipule jamais de chemin absolu** : il ne connaît que des racines approuvées (identifiants opaques) et des chemins relatifs, validés et canonicalisés côté Rust (DEC-014).
 4. **Rien ne s'écrit sans action explicite**, et jamais par-dessus un fichier modifié ailleurs sans décision de l'utilisateur.
 5. Les privilèges sont **minimaux** : une seule fenêtre, vingt-sept commandes IPC nommées, aucune permission de plugin donnée au frontend.
@@ -22,6 +22,7 @@ des plugins `dialog` ni `fs` n'est accordée au frontend (le plugin `dialog` n'e
 |---|---|---|
 | `app_info` | version, plateforme | lecture seule |
 | `pick_project_folder` | dialogue natif de choix d'un dossier | seule voie d'approbation d'une racine nouvelle ; la racine est canonicalisée (liens résolus), doit être un dossier existant |
+| `pick_destination_folder` | dialogue natif de choix du dossier de destination d'un déploiement | même approbation que `pick_project_folder` (racine canonicalisée, dossier existant) ; dans une construction `e2e` seulement, la variable `RUNEFORGE_E2E_DESTINATION` peut remplacer le dialogue |
 | `list_recent_projects`, `forget_recent_project` | projets récents | liste locale ; l'oubli n'efface aucun fichier |
 | `open_recent_project` | rouvre un projet déjà choisi | **refuse un chemin absent de la liste des récents** (`UnknownRoot`) ; ré-approuve après canonicalisation |
 | `scan_project` | parcours de l'arbre | motifs d'inclusion/exclusion ; au plus 200 000 fichiers et 64 niveaux |
@@ -35,6 +36,7 @@ des plugins `dialog` ni `fs` n'est accordée au frontend (le plugin `dialog` n'e
 | `log_event` | une ligne du journal de diagnostic local | Relit le réglage enregistré à chaque événement et écrit uniquement si le journal est activé. Rust vérifie le niveau, le code et les champs attendus. Les valeurs se limitent à des compteurs bornés, des booléens et des valeurs prédéfinies. |
 | `update_check` | cherche une mise à jour dans les releases d'un dépôt GitHub (DEC-046) | ne lit ni n'écrit rien sur le disque ; dépôt, canal et jeton validés avant tout envoi ; la page ne décide de rien : tout vient du **manifeste signé** ; voir « Mises à jour signées » |
 | `update_install` | télécharge, vérifie et installe la mise à jour du dernier contrôle, puis redémarre | n'installe que ce qu'un contrôle a vérifié ; **boîte de dialogue du système** que la page ne peut ni afficher ni valider ; refusée tant que des modifications ne sont pas enregistrées (avant et après le téléchargement) |
+| `sftp_dry_run` | compare des scripts enregistrés avec un dossier distant par SFTP, **en lecture seule** | cible littérale validée (hôte, port, utilisateur, dossier absolu, clé d'hôte `ssh-ed25519` épinglée) ; **boîte de dialogue native** d'accord pour la destination exacte, que la page ne peut ni afficher ni valider ; 1 à 100 chemins `.txt`, 4 Mio par fichier et 16 Mio au total, fichiers locaux lus avant tout accès réseau ; un seul aperçu à la fois (`busy`) ; voir « Aperçu SFTP » |
 | `e2e_project` | crochet des tests | ne rend quelque chose que dans une construction avec la fonctionnalité `e2e` (`#[cfg(feature = "e2e")]`) : **jamais dans une version distribuée** |
 
 ## Chemins et fichiers
@@ -54,7 +56,7 @@ Production (`tauri.conf.json`) : `default-src 'self'; script-src 'self'; style-s
 
 ## Git (lecture seule, après accord)
 
-Git est le **seul** programme que l'application lance, et seulement quand l'utilisateur ouvre l'onglet Git ou compare un fichier avec `HEAD`. Tout passe par `crates/git` (`grep -rn "Command::new" crates apps/desktop/src-tauri/src` : un seul lancement, `crates/git/src/process.rs`).
+Git est l'un des **deux** programmes que l'application lance (l'autre est le client OpenSSH de l'aperçu SFTP, voir « Aperçu SFTP »), et seulement quand l'utilisateur ouvre l'onglet Git ou compare un fichier avec `HEAD`. Tout passe par `crates/git` (`grep -rn "Command::new" crates apps/desktop/src-tauri/src` : deux lancements dans le code du projet, `crates/git/src/process.rs` pour Git et `crates/remote-transport/src/openssh.rs` pour SSH).
 
 | Risque | Mesure | Preuve |
 |---|---|---|
@@ -67,6 +69,27 @@ Git est le **seul** programme que l'application lance, et seulement quand l'util
 | Fuite d'information par un message d'erreur | aucun message de `git` n'est renvoyé (il peut contenir des chemins) : seulement un code (`not_a_repository`, `unsafe_repository`, `timeout`…) | `recognises_what_failed_from_git_messages_without_keeping_them` |
 
 **Non neutralisé** : si l'utilisateur autorise un dépôt dont la configuration locale déclare un **filtre** (`filter.x.clean`, appliqué par `git status` aux fichiers qui le demandent par `.gitattributes`) ou un autre programme que `git status` peut lancer, ce programme s'exécute. C'est le risque que la boîte d'accord dit en toutes lettres ; la mesure est de n'autoriser que des projets de confiance. `safe.directory` n'est jamais contourné : un dépôt qui appartient à un autre utilisateur est refusé par git (`unsafe_repository`).
+
+## Aperçu SFTP (lecture seule, après accord)
+
+**Fichier › Aperçu SFTP…** compare des scripts enregistrés avec un dossier distant. Le second programme que l'application lance est le **client OpenSSH du système** (`%SystemRoot%\System32\OpenSSH\ssh.exe` sous Windows, `/usr/bin/ssh` ou `/bin/ssh` ailleurs), avec le sous-système `sftp`. Code : `crates/remote-transport` (`openssh.rs` pour la ligne de commande, `protocol.rs` pour le sous-ensemble de SFTP v3), `apps/desktop/src-tauri/src/sftp.rs` pour la commande. Aucune bibliothèque réseau ni SSH n'est liée à `crates/remote-transport` (`Cargo.toml` : `base64`, `serde`, `sha2`, `tempfile`, `runeforge-filesystem`).
+
+| Risque | Mesure | Preuve |
+|---|---|---|
+| Connexion à un hôte que l'utilisateur n'a pas désigné, ou accord donné par la page ou par un fichier de configuration | La cible (hôte, port, utilisateur, dossier absolu en ASCII, clé d'hôte) est validée littéralement. Une **boîte de dialogue native**, que la page ne peut ni afficher ni valider, montre `utilisateur@hôte (port)`, le dossier et l'**empreinte SHA-256** de la clé épinglée avant toute connexion ; un refus rend `cancelled` | `target_is_literal_and_key_is_pinned` ; `SftpDialog.test.tsx` (aucun appel avant l'action explicite ; `cancelled` sans détail) |
+| Hôte usurpé, homme du milieu | Clé d'hôte **`ssh-ed25519` épinglée par l'utilisateur**, écrite dans un fichier `known_hosts` temporaire ; `StrictHostKeyChecking=yes`, `GlobalKnownHostsFile=none`, `HostKeyAlgorithms=ssh-ed25519`, `UpdateHostKeys=no`, `VerifyHostKeyDNS=no`, `CheckHostIP=no` | `command_uses_fixed_read_only_subsystem_and_pinned_host_file` |
+| Configuration SSH de l'utilisateur qui détournerait la connexion (`ProxyCommand`, `ProxyJump`, redirections, commande locale) | `-F none` ; environnement **vidé** sauf `SystemRoot`, `WINDIR`, `HOME`, `USERPROFILE` et `SSH_AUTH_SOCK` ; `ProxyCommand=none`, `ProxyJump=none`, `ClearAllForwardings=yes`, `PermitLocalCommand=no`, `-a`, `-x`, `-T` ; sortie d'erreur de `ssh` supprimée | idem |
+| Mot de passe demandé, saisi ou enregistré | **Clé publique via l'agent SSH** seulement : `BatchMode=yes`, `PasswordAuthentication=no`, `KbdInteractiveAuthentication=no`, `GSSAPIAuthentication=no`, `IdentityFile=none`, `NumberOfPasswordPrompts=0` | idem |
+| Écriture ou commande sur le serveur distant | Sous-système `sftp` (`-s sftp`) ; le client n'émet que des requêtes de **lecture** : `INIT`, ouverture `SSH_FXF_READ` sans attribut de création, lecture, fermeture, `LSTAT`, `FSTAT`, `REALPATH`. Aucun message d'écriture n'existe dans le client | `preview_reads_and_hashes_only_a_regular_file` ; `protocol.rs` |
+| Sortie du dossier distant par un lien symbolique ou un chemin qui change | Chaque composant du chemin distant doit être un dossier (`LSTAT`, un lien symbolique est refusé), `REALPATH` doit rendre le chemin à l'identique, seul un fichier régulier est lu, ses attributs sont relus avant et après la lecture (`FSTAT`) | `absence_is_distinct_from_denied_symlink_changed_path_and_size_limit` |
+| Page qui noie la commande, fichiers énormes, serveur qui ne répond pas | 1 à 100 chemins `.txt` uniques et canoniques (jamais `.runeforge`), 4 Mio par fichier, 16 Mio au total, fichiers locaux lus et hachés **avant** tout accès réseau, paquets SFTP bornés (256 Kio), 30 secondes au plus (processus tué), un seul aperçu à la fois | `script_paths_are_bounded_canonical_and_unique`, `rejects_malformed_oversized_and_mismatched_packets`, verrou `ACTIVE` de `sftp.rs` |
+| Fuite d'information par un message d'erreur | Seuls des codes stables sont rendus (`invalid_target`, `connection_failed`, `timed_out`, `cancelled`…) | `SftpDialog.test.tsx` (aucun détail du serveur dans le dialogue) |
+
+**Non traité ou non vérifié** :
+- **Aucun essai contre un vrai serveur SSH/SFTP n'est consigné** : les 6 tests Rust font tourner le client sur des flux en mémoire et vérifient la ligne de commande construite ; les 5 tests TypeScript simulent la commande native. Pas d'étape E2E, pas d'essai sous Linux (`STATUS.md`, « Vérifications de l'aperçu SFTP »).
+- **La clé d'hôte est saisie à la main** : l'application ne peut ni la découvrir ni la vérifier. Une clé obtenue par un canal non fiable annule la protection contre l'usurpation d'hôte.
+- Le comportement dépend du client OpenSSH installé (version, options acceptées) et de l'agent SSH de l'utilisateur ; ni l'un ni l'autre n'est contrôlé avant l'appui sur « Comparer ».
+- Les données saisies (hôte, utilisateur, clé d'hôte, dossier, chemins) ne sont ni enregistrées ni journalisées ; elles restent dans le dialogue jusqu'à sa fermeture.
 
 ## Mises à jour signées (DEC-046)
 
@@ -101,8 +124,9 @@ L'application se met à jour depuis les **releases d'un dépôt GitHub** (privé
 ## Réseau, télémétrie, processus
 
 Vérifié le 2026-11-15 :
-- **Rust** : le seul plugin enregistré est `tauri-plugin-dialog` (`main.rs`). Pour la cible Windows, **le seul client HTTP lié est `ureq`**, et seul `crates/updater` l'utilise (`cargo tree --offline -i ureq --target x86_64-pc-windows-msvc -e normal` : `runeforge-updater` → `runeforge-studio`), avec la pile TLS du système (`native-tls` → `schannel`). `reqwest`, `hyper`, `openssl`, `ring` et `aws-lc-rs` ne sont pas liés pour Windows (`cargo tree -i …` : « nothing to print » ou aucun paquet de ce nom), pas plus que `rustls` (seul le crate de types `rustls-pki-types` l'est). `reqwest` et `hyper` figurent dans `Cargo.lock` pour d'autres plateformes. **Linux** (relevé du 2026-11-15, Ubuntu 26.04 sous WSL2, mêmes commandes `cargo tree --offline -i … -e normal`) : `ureq` n'est lié que par `runeforge-updater` ; la pile TLS est **OpenSSL** (`openssl` 0.10.82 ← `native-tls` 0.2.18 ← `ureq`) ; `reqwest` et `hyper` ne sont pas liés ; `rustls`, `ring`, `aws-lc-rs` et `webpki-root-certs` ne figurent même pas dans `Cargo.lock` (seul `rustls-pki-types`, un crate de types, y est) ; `runeforge-updater` lie 54 caisses. Le seul `Command::new` du code du projet est celui de `crates/git` (voir « Git ») ; `std::process::id()` sert à nommer un fichier temporaire. `git` est lancé sans réseau : `status`, `rev-parse` et `cat-file` n'en ouvrent aucun.
+- **Rust** : le seul plugin enregistré est `tauri-plugin-dialog` (`main.rs`). Pour la cible Windows, **le seul client HTTP lié est `ureq`**, et seul `crates/updater` l'utilise (`cargo tree --offline -i ureq --target x86_64-pc-windows-msvc -e normal` : `runeforge-updater` → `runeforge-studio`), avec la pile TLS du système (`native-tls` → `schannel`). `reqwest`, `hyper`, `openssl`, `ring` et `aws-lc-rs` ne sont pas liés pour Windows (`cargo tree -i …` : « nothing to print » ou aucun paquet de ce nom), pas plus que `rustls` (seul le crate de types `rustls-pki-types` l'est). `reqwest` et `hyper` figurent dans `Cargo.lock` pour d'autres plateformes. **Linux** (relevé du 2026-11-15, Ubuntu 26.04 sous WSL2, mêmes commandes `cargo tree --offline -i … -e normal`) : `ureq` n'est lié que par `runeforge-updater` ; la pile TLS est **OpenSSL** (`openssl` 0.10.82 ← `native-tls` 0.2.18 ← `ureq`) ; `reqwest` et `hyper` ne sont pas liés ; `rustls`, `ring`, `aws-lc-rs` et `webpki-root-certs` ne figurent même pas dans `Cargo.lock` (seul `rustls-pki-types`, un crate de types, y est) ; `runeforge-updater` lie 54 caisses. Le code du projet ne contient que deux `Command::new` : celui de `crates/git` (voir « Git ») et celui de `crates/remote-transport` (le client OpenSSH, voir « Aperçu SFTP ») ; `std::process::id()` sert à nommer un fichier temporaire. `git` est lancé sans réseau : `status`, `rev-parse` et `cat-file` n'en ouvrent aucun.
 - **TypeScript** : les mises à jour n'utilisent aucun `fetch` (tout passe par le cœur natif, voir plus haut). La fonction IA utilise `fetch` seulement après consentement; l'URL est HTTPS ou HTTP vers la boucle locale ou une adresse IPv4 privée, sans identifiants, paramètres ni redirections. Une URL de base est complétée par `/chat/completions`. Le fournisseur envoie le modèle et le prompt, plus le NPC affiché uniquement en mode proposition; aucune autre donnée du projet n'est ajoutée. Une clé saisie est envoyée comme Bearer, sans être enregistrée. HTTP n'est pas chiffré. La CSP Tauri autorise le schéma `http:` pour les fournisseurs locaux configurables; le contrôle applicatif rejette les hôtes HTTP publics, mais la portée plus large de la CSP demeure à réviser indépendamment. Aucune télémétrie ni aucun `child_process`.
+- **SFTP** (aperçu en lecture seule) : le seul trafic SSH est celui du client OpenSSH du système, lancé par `crates/remote-transport` vers l'hôte que l'utilisateur a saisi et approuvé dans une boîte de dialogue native, jamais en arrière-plan ni au démarrage ; ce n'est pas un client HTTP (voir « Aperçu SFTP »).
 - **Télémétrie** : aucun code d'analyse ; le seul texte qui en parle est l'engagement affiché dans les réglages (« Aucune télémétrie. Aucun accès réseau… »).
 - **Code `unsafe`** : aucun dans `crates/` ni `apps/desktop/src-tauri/src`.
 - **Journaux** : **aucun journal n'est écrit par défaut** (l'E2E vérifie qu'aucun fichier n'existe tant que le réglage n'est pas activé, après toutes les étapes qui précèdent). Si l'utilisateur coche « Écrire un journal de diagnostic local » (Paramètres › Confidentialité),
@@ -126,6 +150,7 @@ Vérifié le 2026-11-15 :
 | Dépôt et canal des mises à jour | réglages locaux de l'application | nom d'un dépôt public ou privé (`proprietaire/depot`) et `stable`/`beta` ; aucun jeton |
 | Jeton d'accès GitHub des mises à jour | mémoire du contrôleur, jusqu'à la fermeture de l'application | **jamais enregistré** (ni réglages, ni journal, ni état affiché) ; envoyé seulement à `api.github.com` comme Bearer ; lit aussi le code source d'un dépôt privé (voir « Mises à jour signées ») |
 | Exécutable en cours de mise à jour (`.download`, `.new`, `.old`) | à côté de l'exécutable de l'application | supprimés au démarrage suivant |
+| Cible de l'aperçu SFTP (hôte, port, utilisateur, clé d'hôte, dossier distant, chemins) | état du dialogue, en mémoire | **jamais enregistrée** (ni réglages, ni journal) ; la clé d'hôte est une clé publique ; l'authentification passe par l'agent SSH de l'utilisateur, jamais par l'application |
 
 Aucun stockage sécurisé de clé API par le système d'exploitation n'est fourni : les clés restent en mémoire et ne sont pas enregistrées.
 
@@ -142,6 +167,7 @@ Aucun stockage sécurisé de clé API par le système d'exploitation n'est fourn
 | Envoi involontaire d'un script ou d'un prompt à un fournisseur IA | consentement précis avant chaque envoi; confirmation distincte hors boucle locale; prompt seul en mode génération; aperçu et validation locale avant création d'un nouveau fichier; clé temporaire | `ai.test.ts`, `AIProposalPanel.test.tsx`; tests simulés, fournisseur réel non vérifié; revue indépendante de la CSP requise |
 | Dépendances compromises | `pnpm-lock.yaml` et `Cargo.lock` versionnés, installation avec lockfile ; inventaire des licences (`docs/LEGAL.md`) | `scripts/licenses-report.ts` |
 | Serveur de jeu | **jamais lancé** par l'application ; ses fichiers sont lus seuls, en lecture seule | `real-server-smoke.ts` : « dossier .runeforge créé dans le serveur ? false » |
+| Écriture ou commande involontaire sur un serveur distant | aperçu SFTP en lecture seule : requêtes de lecture seulement, accord natif pour la destination exacte, clé d'hôte épinglée, authentification par l'agent SSH | `crates/remote-transport/src/tests.rs`, `SftpDialog.test.tsx` ; jamais essayé contre un vrai serveur |
 | Plugins et exécution contre un serveur de test | **n'existent pas encore** : à concevoir avec permissions explicites et isolation (CLAUDE.md §13-14) | — |
 
 ## Ce qui n'est pas fait
@@ -150,6 +176,7 @@ Aucun stockage sécurisé de clé API par le système d'exploitation n'est fourn
 - **Revue de sécurité externe**, test d'intrusion, analyse du paquet distribué : non faits.
 - **Mise à jour signée** : elle existe (DEC-046), sans plugin d'actualisation (code du projet : `crates/updater`), mais **la clé de signature de production n'existe pas encore** (`pnpm release:keygen`, action du propriétaire) et **aucune release réelle n'a été publiée ni vérifiée de bout en bout** (voir « Mises à jour signées »). **Signature de code Windows** : `BLOCKED_EXTERNAL` (certificat du propriétaire).
 - **Linux** : l'application n'a été lancée que 20 secondes sous WSLg (elle démarre, DEC-048) ; capacités, CSP et comportement de WebKitGTK non testés. L'exécutable lie dynamiquement GTK 3, WebKitGTK 4.1, libsoup 3, glibc et OpenSSL 3 : leurs mises à jour de sécurité sont celles de la distribution de l'utilisateur, pas celles de RuneForge.
+- **Aperçu SFTP** : jamais essayé contre un vrai serveur SSH, sans étape E2E ni essai sous Linux ; clé d'hôte saisie à la main ; dépend du client OpenSSH installé (voir « Aperçu SFTP »).
 - La fonctionnalité `e2e` ne doit **jamais** figurer dans un paquet distribué : à contrôler dans la procédure de livraison (`RELEASE_CHECKLIST.md`).
 
 ## Rejouer les vérifications
@@ -160,7 +187,8 @@ cargo tree --offline -i ureq --target x86_64-pc-windows-msvc -e normal   # le se
 cargo tree --offline -i reqwest --target x86_64-pc-windows-msvc -e all   # « nothing to print » : ni reqwest ni hyper pour Windows
 cargo test -p runeforge-updater                  # mises à jour : signature, canaux, jeton, redirections, empreinte, retour arrière, vrai HTTP local
 pnpm exec vitest run scripts/release             # outillage de release : manifeste, signature, refus avant publication
-grep -rn "Command::new" crates apps/desktop/src-tauri/src --include=*.rs     # un seul lancement de processus : crates/git/src/process.rs (hors tests)
+grep -rn "Command::new" crates apps/desktop/src-tauri/src --include=*.rs     # deux lancements de processus (hors tests) : crates/git/src/process.rs et crates/remote-transport/src/openssh.rs
+cargo test -p runeforge-remote-transport --offline                           # aperçu SFTP : cible, ligne de commande ssh, protocole en lecture seule (flux en mémoire)
 cargo test -p runeforge-git                      # git en lecture seule : environnement, délais, vrais dépôts (ignorés si git est absent)
 pnpm exec tsx scripts/licenses-report.ts          # inventaire des licences (hors ligne)
 pnpm e2e                                         # le scénario principal puis les mises à jour (faux serveur GitHub local) sur l'exécutable réel, dont le contrôle de la console et de la CSP

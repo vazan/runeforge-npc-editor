@@ -4,6 +4,15 @@ Format inspiré de *Keep a Changelog*. Les versions suivent l'état réel du pro
 
 ## [Non publié]
 
+### Corrigé — documentation : aperçu SFTP et références périmées
+
+- **Aperçu SFTP en lecture seule**, présent dans le code (`crates/remote-transport`, commande `sftp_dry_run`, `SftpDialog`, menu Fichier › Aperçu SFTP…) mais absent des documents, qui annonçaient le SSH/SFTP « à implémenter » : désormais décrit dans `STATUS.md` (M6, RF-018, vérifications du 2026-11-15 : 6 tests Rust et 5 tests TypeScript PASS), `KNOWN_LIMITATIONS.md`, `SECURITY.md` (commandes `sftp_dry_run` et `pick_destination_folder`, section « Aperçu SFTP », **deuxième lancement de processus : le client OpenSSH**), `ROADMAP.md`, `TEST_MATRIX.md` et les guides utilisateur FR/EN. Le **transfert** SSH/SFTP reste à réaliser ; l'aperçu n'a jamais été essayé contre un vrai serveur SSH. Aucun changement de code.
+- **Références périmées** : `STATUS.md` ne renvoie plus par lien à `PROMPT_CLAUDE_APPLICATION_COMPLETE.md` ni à `CLAUDE.md` (supprimés par le commit `d2c5b96`, relisibles dans l'historique) ; `Software/LICENSE` devient `LICENSE` dans `LEGAL.md`, `KNOWN_LIMITATIONS.md`, `RELEASE_CHECKLIST.md` et `THIRD_PARTY_LICENSES.md`.
+
+### Ajouté — documentation pour un projet ouvert
+
+- **Wiki bilingue** (`wiki/`, sources compatibles avec un wiki GitHub : 15 pages en anglais `EN-…` et en français `FR-…`, page d'accueil, barre latérale) ; **`README.md`** réécrit en anglais pour un projet open source et **`README.fr.md`** ; captures d'écran de l'E2E dans `docs/images/`.
+
 ### Ajouté — modèles de tickets GitHub (`.github/ISSUE_TEMPLATE/`)
 
 - **`bug_report.yml`** (bogue, dont une question obligatoire sur l'intégrité des fichiers de l'utilisateur), **`diagnostic_report.yml`** (fausse alerte, problème manqué ou documentation de commande erronée, avec le résultat observé sur un vrai serveur : l'application n'exécute jamais le serveur) et **`feature_request.yml`** (besoin avant solution, persona, lien vers un identifiant `RF-xxx`). Formulaires en anglais, tickets en français bienvenus ; chacun rappelle de ne jamais coller de secret et de ne publier qu'un extrait minimal anonymisé.
