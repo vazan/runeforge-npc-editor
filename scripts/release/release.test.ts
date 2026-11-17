@@ -44,7 +44,7 @@ function writeBinary(directory: string, name: string, kind: keyof typeof HEADERS
   return path;
 }
 
-const goodText = (publicKey: string, version: string): string => `padding ${publicKey.trim()} padding version=${version} padding`;
+const goodText = (publicKey: string, version: string): string => `padding ${publicKey.trim()} padding RUNEFORGE_RELEASE_VERSION=${version}\0 padding`;
 
 interface World {
   readonly dir: string;
@@ -186,15 +186,47 @@ describe("release:prepare", () => {
     expect(() => prepareRelease(other.options)).toThrow(/ne contient pas la version 0\.2\.0/);
   });
 
-  it("n'exige pas de texte de version d'un executable Linux (un ELF de Tauri n'en porte aucun) mais garde la date, la cle et l'en-tete", { timeout: 60_000 }, () => {
+  it("exige le marqueur Linux (un ELF de Tauri ne porte pas la version autrement) et garde le controle de date", { timeout: 60_000 }, () => {
     const noVersion = withLinux(world(), { text: (key) => `padding ${key.trim()} sans aucun texte de version` });
-    expect(prepareRelease(noVersion.options).files).toEqual([WINDOWS_FILE, LINUX_FILE, MANIFEST_ASSET, SIGNATURE_ASSET]);
+    expect(() => prepareRelease(noVersion.options)).toThrow(/\[linux-x86_64\].*marqueur absent/);
     expect(() => prepareRelease(withLinux(world(), { text: (key) => `padding ${key.trim()}`, olderBy: 150 }).options)).toThrow(/\[linux-x86_64\] l'executable est plus ancien/);
   });
 
   it("refuse un executable qui embarque une cle de test (construction `e2e`)", () => {
     const built = world({ publicKey: otherPublic, exeText: (key) => `${key} ${testPublic.trim()} version=0.2.0` });
     expect(() => prepareRelease({ ...built.options, forbiddenKeys: [testPublic] })).toThrow(/embarque une cle de test/);
+  });
+
+  it("accepte la version UTF-16LE des ressources Windows sans exiger une copie UTF-8", { timeout: 60_000 }, () => {
+    const built = world({ version: "0.1.0-beta.2", exeText: (key) => `${key} sans version UTF-8` });
+    writeFileSync(built.exe, Buffer.concat([readFileSync(built.exe), Buffer.from("0.1.0-beta.2", "utf16le")]));
+    expect(prepareRelease(built.options)).toMatchObject({ tag: "v0.1.0-beta.2" });
+  });
+
+  it("refuse une ancienne version UTF-16LE sous Windows et conserve le controle UTF-8 sous Linux", () => {
+    const built = world({ version: "0.1.0-beta.2", exeText: (key) => `${key} sans version UTF-8` });
+    writeFileSync(built.exe, Buffer.concat([readFileSync(built.exe), Buffer.from("0.1.0-beta.1", "utf16le")]));
+    expect(() => prepareRelease(built.options)).toThrow(/\[windows-x86_64\].*ne contient pas la version/);
+    const linux = withLinux(world(), { text: (key) => `${key} sans version UTF-8` });
+    writeFileSync(linux.linux, Buffer.concat([readFileSync(linux.linux), Buffer.from("0.2.0", "utf16le")]));
+    expect(() => prepareRelease(linux.options)).toThrow(/\[linux-x86_64\].*ne contient pas la version/);
+  });
+
+  it("exige un marqueur Linux complet, pas une version incidente ou un prefixe", () => {
+    for (const text of [
+      (key: string) => `${key} version=0.2.0`,
+      (key: string) => `${key} RUNEFORGE_RELEASE_VERSION=0.2.0-beta.1\0`,
+      (key: string) => `${key} RUNEFORGE_RELEASE_VERSION=0.1.0\0 version=0.2.0`,
+    ]) {
+      const linux = withLinux(world(), { text });
+      expect(() => prepareRelease(linux.options)).toThrow(/\[linux-x86_64\].*version/);
+      expect(existsSync(linux.options.out)).toBe(false);
+    }
+  });
+
+  it("refuse un marqueur Windows different meme si la version attendue figure ailleurs", () => {
+    const built = world({ exeText: (key) => `${key} RUNEFORGE_RELEASE_VERSION=0.1.0\0 version=0.2.0` });
+    expect(() => prepareRelease(built.options)).toThrow(/\[windows-x86_64\].*version/);
   });
 
   it("refuse l'executable d'un systeme donne pour l'autre, quelle que soit sa signature", () => {

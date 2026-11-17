@@ -143,10 +143,16 @@ function readArtifact(input: ArtifactInput, context: { version: string; publicKe
       refuse(`${label} l'executable embarque une cle de test (construction \`e2e\` ?) : reconstruisez-le en production`);
     }
   }
-  // La version n'est pas ecrite en clair dans un vrai binaire de Tauri (constate sur 0.1.0-beta.1) : un executable Windows la porte dans sa
-  // ressource de version (UTF-16), un ELF n'en porte aucune. Windows : exigee, en UTF-8 ou en UTF-16. Linux : seule la date ci-dessus
-  // protege d'une construction faite avant le changement de version.
-  if (kind === "pe" && !carriesVersion(bytes, context.version)) {
+  const marker = "RUNEFORGE_RELEASE_VERSION=";
+  const hasMarker = bytes.includes(Buffer.from(marker));
+  // Les anciens PE n'ont pas de marqueur, mais leurs ressources contiennent la version.
+  const hasVersion = hasMarker
+    ? bytes.includes(Buffer.from(`${marker}${context.version}\0`))
+    : kind === "pe" && carriesVersion(bytes, context.version);
+  if (kind === "elf" && !hasMarker) {
+    refuse(`${label} l'executable ne contient pas la version ${context.version} (marqueur absent) : reconstruisez l'executable Linux et l'AppImage avec l'outillage actuel`);
+  }
+  if (!hasVersion) {
     refuse(`${label} l'executable ne contient pas la version ${context.version} : reconstruisez-le apres le changement de version`);
   }
   return { platform: input.platform, name: artifactName(context.version, input.platform), bytes, path: input.path };

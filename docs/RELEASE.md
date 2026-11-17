@@ -40,6 +40,27 @@ Un dépôt privé n'est visible que d'un compte autorisé. Chaque utilisateur cr
 
 ## 3. Publier une version
 
+### Lanceur unique Windows + Linux
+
+Après avoir mis à jour la version et les notes, commitez tous les changements et poussez le commit. Dans PowerShell, saisissez localement le chemin de la clé de production et son mot de passe aux invites :
+
+```powershell
+$env:TAURI_SIGNING_PRIVATE_KEY_PATH = Read-Host 'Chemin de la clé privée'
+$env:TAURI_SIGNING_PRIVATE_KEY_PASSWORD = [System.Net.NetworkCredential]::new('', (Read-Host 'Mot de passe' -AsSecureString)).Password
+try {
+    pnpm exec tsx scripts\release\build.ts --notes scripts\release\notes-0.1.0-beta.2.txt --repo vazan/runeforge-npc-editor --confirm-wsl-sync --confirm-appimage-licenses
+} finally {
+    Remove-Item Env:\TAURI_SIGNING_PRIVATE_KEY_PASSWORD
+    Remove-Item Env:\TAURI_SIGNING_PRIVATE_KEY_PATH
+}
+```
+
+Remplacez le chemin des notes et le dépôt au besoin. Ne partagez jamais la clé ni le mot de passe et ne les enregistrez pas dans le dépôt. Le lanceur exige un dépôt propre et des notes suivies par Git; il vérifie, construit Windows et Linux, signe le manifeste et crée un **brouillon** ciblant le commit courant, puis y ajoute l'AppImage. Le manifeste conserve l'ELF brut Linux pour les mises à jour. Relisez et publiez le brouillon manuellement; la mise à jour en place d'un AppImage n'a pas été vérifiée.
+
+`--confirm-wsl-sync` autorise les suppressions de la synchronisation dans `~/runeforge-npc-editor` de WSL et le remplacement des artefacts Linux; vérifiez ces fichiers avant de l'utiliser. `--confirm-appimage-licenses` confirme que la revue des licences, notices et accès aux sources est faite. Si les outils AppImage manquent, `--allow-download` autorise leur téléchargement et leur exécution. Le lanceur s'arrête à la première erreur; si l'ajout de l'AppImage échoue, le brouillon existe déjà et doit être complété manuellement. Il ne supprime pas un dossier de release existant.
+
+### Étapes manuelles
+
 ```bash
 # 1. Changer la version (une seule source : apps/desktop/src-tauri/tauri.conf.json), tenir CHANGELOG.md à jour
 # 2. Vérifier
@@ -77,6 +98,8 @@ Puis, dans GitHub : relire le brouillon et **le publier** (c'est seulement alors
 | le dossier de sortie n'est pas vide | pas de mélange de deux releases |
 
 `release:publish` revérifie le dossier (taille, SHA-256, signature) avant de rien envoyer, et marque une release du canal bêta comme *pre-release* (l'application exige que l'indicateur de GitHub et le canal du manifeste soient d'accord : sinon `bad_manifest`).
+
+Le binaire embarque un marqueur `RUNEFORGE_RELEASE_VERSION=<version>` terminé par un octet nul, généré depuis `tauri.conf.json` et conservé malgré les optimisations Rust. La préparation exige la correspondance exacte de ce marqueur; une version trouvée ailleurs ou un préfixe de version ne suffit pas. Sous Linux, les binaires construits avant ce marqueur doivent être reconstruits, ainsi que l'AppImage (`pnpm build:linux`). Pour les anciens exécutables Windows sans marqueur seulement, le contrôle accepte encore le texte UTF-8 ou UTF-16LE des ressources PE. Les contrôles de clé publique, de clé de test, de plateforme et de date restent actifs.
 
 ### Construire pour Linux
 

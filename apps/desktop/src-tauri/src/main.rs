@@ -20,6 +20,8 @@ use tauri::{Emitter, Manager};
 const CLOSE_REQUESTED_EVENT: &str = "runeforge://close-requested";
 
 fn main() {
+    // Conserve un marqueur exact dans l'ELF/PE meme lorsque la version Tauri est optimisee.
+    std::hint::black_box(concat!("RUNEFORGE_RELEASE_VERSION=", env!("RUNEFORGE_RELEASE_VERSION"), "\0"));
     let result = tauri::Builder::default()
         .plugin(tauri_plugin_dialog::init())
         .setup(|app| {
