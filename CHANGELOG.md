@@ -4,6 +4,10 @@ Format inspiré de *Keep a Changelog*. Les versions suivent l'état réel du pro
 
 ## [Non publié]
 
+### Corrigé — `release:prepare` face à de vrais binaires
+
+- Premier passage de l'outillage sur de vrais exécutables (0.1.0-beta.1) : le contrôle « l'exécutable contient la version » cherchait le texte en UTF-8, or un binaire de Tauri n'écrit pas la version en clair — un `.exe` la porte en **UTF-16** dans sa ressource de version (`FileVersion` / `ProductVersion` vérifiés), un **ELF n'en porte aucune**. Windows : la version est lue en UTF-8 ou en UTF-16 ; Linux : seule la date (l'exécutable doit être plus récent que `tauri.conf.json`) protège d'une construction antérieure au changement de version. Deux tests ajoutés (UTF-16 accepté, autre version refusée ; ELF sans texte de version accepté mais date, clé et en-tête contrôlés), mutation détectée ; `docs/RELEASE.md` mis à jour.
+
 ## [0.1.0-beta.1] — 2026-11-15
 
 **Première pré-version publique** (canal bêta, publiée comme *pre-release* GitHub). Windows x86_64 et Linux x86_64 (binaire brut). La clé de signature des mises à jour de production a été créée et sa clé publique est embarquée (`apps/desktop/src-tauri/update-public-key.txt`) : cette version peut donc déjà vérifier les mises à jour signées, sans qu'une mise à jour réelle ait encore été essayée contre GitHub. Pas de signature de code Windows ; la fenêtre Linux n'a été lancée que 20 secondes. Le dépôt de mises à jour proposé par défaut est désormais `vazan/runeforge-npc-editor` (c'était l'ancien dépôt parent `vazan/KingdomOfValhalla`). Le contenu de cette version est l'ensemble des entrées ci-dessous.

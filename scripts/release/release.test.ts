@@ -172,6 +172,26 @@ describe("release:prepare", () => {
     expect(() => prepareRelease(world({ exeText: (key) => `${key} sans la version` }).options)).toThrow(/ne contient pas la version 0\.2\.0/);
   });
 
+  it("lit la version d'un executable Windows en UTF-8 ou dans sa ressource de version (UTF-16), comme un vrai binaire de Tauri", { timeout: 60_000 }, () => {
+    const utf16 = world();
+    const when = Date.now() / 1000 - 50;
+    // Comme un vrai executable : la cle en clair, la version seulement en UTF-16 (ressource de version).
+    writeFileSync(utf16.exe, Buffer.concat([HEADERS.pe, Buffer.from(`padding ${testPublic.trim()} padding `), Buffer.from("0.2.0", "utf16le"), Buffer.from(" padding")]));
+    utimesSync(utf16.exe, when, when);
+    expect(prepareRelease(utf16.options).tag).toBe("v0.2.0");
+    // Une autre version en UTF-16 n'est pas la bonne.
+    const other = world();
+    writeFileSync(other.exe, Buffer.concat([HEADERS.pe, Buffer.from(`padding ${testPublic.trim()} padding `), Buffer.from("0.1.9", "utf16le")]));
+    utimesSync(other.exe, when, when);
+    expect(() => prepareRelease(other.options)).toThrow(/ne contient pas la version 0\.2\.0/);
+  });
+
+  it("exige le marqueur Linux (un ELF de Tauri ne porte pas la version autrement) et garde le controle de date", { timeout: 60_000 }, () => {
+    const noVersion = withLinux(world(), { text: (key) => `padding ${key.trim()} sans aucun texte de version` });
+    expect(() => prepareRelease(noVersion.options)).toThrow(/\[linux-x86_64\].*marqueur absent/);
+    expect(() => prepareRelease(withLinux(world(), { text: (key) => `padding ${key.trim()}`, olderBy: 150 }).options)).toThrow(/\[linux-x86_64\] l'executable est plus ancien/);
+  });
+
   it("refuse un executable qui embarque une cle de test (construction `e2e`)", () => {
     const built = world({ publicKey: otherPublic, exeText: (key) => `${key} ${testPublic.trim()} version=0.2.0` });
     expect(() => prepareRelease({ ...built.options, forbiddenKeys: [testPublic] })).toThrow(/embarque une cle de test/);
@@ -221,8 +241,6 @@ describe("release:prepare", () => {
     const withoutKey = withLinux(world(), { text: () => "padding sans cle version=0.2.0" });
     expect(() => prepareRelease(withoutKey.options)).toThrow(/\[linux-x86_64\] l'executable n'embarque pas la cle publique/);
     expect(existsSync(withoutKey.options.out)).toBe(false);
-    const withoutVersion = withLinux(world(), { text: (key) => `${key} sans la version` });
-    expect(() => prepareRelease(withoutVersion.options)).toThrow(/\[linux-x86_64\] l'executable ne contient pas la version/);
     const stale = withLinux(world(), { olderBy: 150 });
     expect(() => prepareRelease(stale.options)).toThrow(/\[linux-x86_64\] l'executable est plus ancien/);
     const built = world({ publicKey: otherPublic });
