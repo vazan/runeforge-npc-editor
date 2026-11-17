@@ -137,9 +137,15 @@ function readArtifact(input: ArtifactInput, context: { version: string; publicKe
       refuse(`${label} l'executable embarque une cle de test (construction \`e2e\` ?) : reconstruisez-le en production`);
     }
   }
-  // Les ressources de version PE sont encodees en UTF-16LE.
-  const hasVersion = bytes.includes(Buffer.from(context.version)) ||
-    (kind === "pe" && bytes.includes(Buffer.from(context.version, "utf16le")));
+  const marker = "RUNEFORGE_RELEASE_VERSION=";
+  const hasMarker = bytes.includes(Buffer.from(marker));
+  // Les anciens PE n'ont pas de marqueur, mais leurs ressources contiennent la version.
+  const hasVersion = hasMarker
+    ? bytes.includes(Buffer.from(`${marker}${context.version}\0`))
+    : kind === "pe" && (bytes.includes(Buffer.from(context.version)) || bytes.includes(Buffer.from(context.version, "utf16le")));
+  if (kind === "elf" && !hasMarker) {
+    refuse(`${label} l'executable ne contient pas la version ${context.version} (marqueur absent) : reconstruisez l'executable Linux et l'AppImage avec l'outillage actuel`);
+  }
   if (!hasVersion) {
     refuse(`${label} l'executable ne contient pas la version ${context.version} : reconstruisez-le apres le changement de version`);
   }

@@ -99,7 +99,7 @@ Puis, dans GitHub : relire le brouillon et **le publier** (c'est seulement alors
 
 `release:publish` revérifie le dossier (taille, SHA-256, signature) avant de rien envoyer, et marque une release du canal bêta comme *pre-release* (l'application exige que l'indicateur de GitHub et le canal du manifeste soient d'accord : sinon `bad_manifest`).
 
-Le contrôle de version accepte le texte UTF-8 et, pour Windows, le texte UTF-16LE des ressources PE. Une version Windows absente du texte UTF-8 seulement ne signifie donc pas que le binaire est ancien. Après correction de l'outillage, si les exécutables de production ont déjà été reconstruits à la bonne version, relancez `release:prepare` sans recommencer les constructions, puis `release:publish` et l'ajout de l'AppImage.
+Le binaire embarque un marqueur `RUNEFORGE_RELEASE_VERSION=<version>` terminé par un octet nul, généré depuis `tauri.conf.json` et conservé malgré les optimisations Rust. La préparation exige la correspondance exacte de ce marqueur; une version trouvée ailleurs ou un préfixe de version ne suffit pas. Sous Linux, les binaires construits avant ce marqueur doivent être reconstruits, ainsi que l'AppImage (`pnpm build:linux`). Pour les anciens exécutables Windows sans marqueur seulement, le contrôle accepte encore le texte UTF-8 ou UTF-16LE des ressources PE. Les contrôles de clé publique, de clé de test, de plateforme et de date restent actifs.
 
 ### Construire pour Linux
 

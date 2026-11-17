@@ -44,7 +44,7 @@ function writeBinary(directory: string, name: string, kind: keyof typeof HEADERS
   return path;
 }
 
-const goodText = (publicKey: string, version: string): string => `padding ${publicKey.trim()} padding version=${version} padding`;
+const goodText = (publicKey: string, version: string): string => `padding ${publicKey.trim()} padding RUNEFORGE_RELEASE_VERSION=${version}\0 padding`;
 
 interface World {
   readonly dir: string;
@@ -190,6 +190,23 @@ describe("release:prepare", () => {
     const linux = withLinux(world(), { text: (key) => `${key} sans version UTF-8` });
     writeFileSync(linux.linux, Buffer.concat([readFileSync(linux.linux), Buffer.from("0.2.0", "utf16le")]));
     expect(() => prepareRelease(linux.options)).toThrow(/\[linux-x86_64\].*ne contient pas la version/);
+  });
+
+  it("exige un marqueur Linux complet, pas une version incidente ou un prefixe", () => {
+    for (const text of [
+      (key: string) => `${key} version=0.2.0`,
+      (key: string) => `${key} RUNEFORGE_RELEASE_VERSION=0.2.0-beta.1\0`,
+      (key: string) => `${key} RUNEFORGE_RELEASE_VERSION=0.1.0\0 version=0.2.0`,
+    ]) {
+      const linux = withLinux(world(), { text });
+      expect(() => prepareRelease(linux.options)).toThrow(/\[linux-x86_64\].*version/);
+      expect(existsSync(linux.options.out)).toBe(false);
+    }
+  });
+
+  it("refuse un marqueur Windows different meme si la version attendue figure ailleurs", () => {
+    const built = world({ exeText: (key) => `${key} RUNEFORGE_RELEASE_VERSION=0.1.0\0 version=0.2.0` });
+    expect(() => prepareRelease(built.options)).toThrow(/\[windows-x86_64\].*version/);
   });
 
   it("refuse l'executable d'un systeme donne pour l'autre, quelle que soit sa signature", () => {
