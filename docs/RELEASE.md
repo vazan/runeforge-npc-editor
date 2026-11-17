@@ -99,6 +99,8 @@ Puis, dans GitHub : relire le brouillon et **le publier** (c'est seulement alors
 
 `release:publish` revérifie le dossier (taille, SHA-256, signature) avant de rien envoyer, et marque une release du canal bêta comme *pre-release* (l'application exige que l'indicateur de GitHub et le canal du manifeste soient d'accord : sinon `bad_manifest`).
 
+Le contrôle de version accepte le texte UTF-8 et, pour Windows, le texte UTF-16LE des ressources PE. Une version Windows absente du texte UTF-8 seulement ne signifie donc pas que le binaire est ancien. Après correction de l'outillage, si les exécutables de production ont déjà été reconstruits à la bonne version, relancez `release:prepare` sans recommencer les constructions, puis `release:publish` et l'ajout de l'AppImage.
+
 ### Construire pour Linux
 
 Le binaire Linux se construit **sur une machine Linux** (Ubuntu 22.04 ou plus récent ; WSL convient). Construisez-le sur la **plus ancienne distribution que vous voulez supporter** : il est lié dynamiquement à la glibc, à OpenSSL (`libssl.so.3`) et à WebKitGTK 4.1 (`libwebkit2gtk-4.1.so.0`), donc il ne démarre pas sur une distribution plus ancienne que celle où il a été construit.

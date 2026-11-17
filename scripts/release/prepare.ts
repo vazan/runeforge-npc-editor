@@ -137,7 +137,10 @@ function readArtifact(input: ArtifactInput, context: { version: string; publicKe
       refuse(`${label} l'executable embarque une cle de test (construction \`e2e\` ?) : reconstruisez-le en production`);
     }
   }
-  if (!bytes.includes(Buffer.from(context.version))) {
+  // Les ressources de version PE sont encodees en UTF-16LE.
+  const hasVersion = bytes.includes(Buffer.from(context.version)) ||
+    (kind === "pe" && bytes.includes(Buffer.from(context.version, "utf16le")));
+  if (!hasVersion) {
     refuse(`${label} l'executable ne contient pas la version ${context.version} : reconstruisez-le apres le changement de version`);
   }
   return { platform: input.platform, name: artifactName(context.version, input.platform), bytes, path: input.path };

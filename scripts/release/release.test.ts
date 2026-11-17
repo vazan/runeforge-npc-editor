@@ -177,6 +177,21 @@ describe("release:prepare", () => {
     expect(() => prepareRelease({ ...built.options, forbiddenKeys: [testPublic] })).toThrow(/embarque une cle de test/);
   });
 
+  it("accepte la version UTF-16LE des ressources Windows sans exiger une copie UTF-8", { timeout: 60_000 }, () => {
+    const built = world({ version: "0.1.0-beta.2", exeText: (key) => `${key} sans version UTF-8` });
+    writeFileSync(built.exe, Buffer.concat([readFileSync(built.exe), Buffer.from("0.1.0-beta.2", "utf16le")]));
+    expect(prepareRelease(built.options)).toMatchObject({ tag: "v0.1.0-beta.2" });
+  });
+
+  it("refuse une ancienne version UTF-16LE sous Windows et conserve le controle UTF-8 sous Linux", () => {
+    const built = world({ version: "0.1.0-beta.2", exeText: (key) => `${key} sans version UTF-8` });
+    writeFileSync(built.exe, Buffer.concat([readFileSync(built.exe), Buffer.from("0.1.0-beta.1", "utf16le")]));
+    expect(() => prepareRelease(built.options)).toThrow(/\[windows-x86_64\].*ne contient pas la version/);
+    const linux = withLinux(world(), { text: (key) => `${key} sans version UTF-8` });
+    writeFileSync(linux.linux, Buffer.concat([readFileSync(linux.linux), Buffer.from("0.2.0", "utf16le")]));
+    expect(() => prepareRelease(linux.options)).toThrow(/\[linux-x86_64\].*ne contient pas la version/);
+  });
+
   it("refuse l'executable d'un systeme donne pour l'autre, quelle que soit sa signature", () => {
     const base = world();
     // Un executable Windows (MZ) donne comme Linux, et un ELF donne comme Windows.
